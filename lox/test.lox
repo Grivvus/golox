@@ -1,0 +1,24 @@
+fun main(){
+    print 1 + 2 + 3;
+    print "Hello world!";
+    kitten = Cat(2.5, 15, "meow-meow");
+    kitten.meow();
+}
+
+class Animal{
+    init(height, weight){
+        this.height = height;
+        this.weight = weight;
+    }
+}
+
+class Cat < Animal{
+    init(height, weight, meow_sound){
+        super.init(height, weight);
+        this.meow_sound = meow_sound;
+    }
+
+    meow(){
+        print this.meow_sound;
+    }
+}
