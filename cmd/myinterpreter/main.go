@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
+	// You can use print statements as follows for debugging, they"ll be visible when running tests.
 	fmt.Fprintln(os.Stderr, "Logs from your program will appear here!")
 
 	if len(os.Args) < 3 {
@@ -29,21 +29,69 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
-    
+    var line uint = 1
+    var tokens []Token
+    var isLexicalError bool
     for _, literal := range fileContents{
-        switch literal {
-        case '(': fmt.Println("LEFT_PAREN ( null")
-        case ')': fmt.Println("RIGHT_PAREN ) null")
-        case '{': fmt.Println("LEFT_BRACE { null")
-        case '}': fmt.Println("RIGHT_BRACE } null")
-        case '*': fmt.Println("STAR * null")
-        case '.': fmt.Println("DOT . null")
-        case ',': fmt.Println("COMMA , null")
-        case '+': fmt.Println("PLUS + null")
-        case '-': fmt.Println("MINUS - null")
-        case '/': fmt.Println("SLASH / null")
-        case ';': fmt.Println("SEMICOLON ; null")
+        if literal == '\n'{
+            line++
+        } else {
+            token, err := newToken(string(literal), line)
+            if err == nil{
+                tokens = append(tokens, *token)
+            } else {
+                isLexicalError = true
+                fmt.Fprintln(os.Stderr, err)
+            }
         }
     }
-    fmt.Println("EOF  null")
+    for _, token := range tokens{
+        fmt.Println(token.toStr())
+    }
+    token, err := newToken("EOF", 0)
+    if err == nil {
+        fmt.Println(token.toStr())
+    }
+    if isLexicalError{
+        os.Exit(65)
+    }
+}
+
+type Token struct{
+    lexeme string
+    tokenName string
+    literal any
+    line uint
+}
+
+func newToken(lexeme string, line uint) (*Token, error){
+    t := new(Token)
+    t.line = line
+    t.literal = nil
+    switch lexeme{
+    case "(": t.lexeme = "("; t.tokenName = "LEFT_PAREN"
+    case ")": t.lexeme = ")"; t.tokenName = "RIGHT_PAREN"
+    case "{": t.lexeme = "{"; t.tokenName = "LEFT_BRACE"
+    case "}": t.lexeme = "}"; t.tokenName = "RIGHT_BRACE"
+    case "*": t.lexeme = "*"; t.tokenName = "STAR"
+    case ".": t.lexeme = "."; t.tokenName = "DOT"
+    case ",": t.lexeme = ","; t.tokenName = "COMMA"
+    case "+": t.lexeme = "+"; t.tokenName = "PLUS"
+    case "-": t.lexeme = "-"; t.tokenName = "MINUS"
+    case "/": t.lexeme = "/"; t.tokenName = "SLASH"
+    case ";": t.lexeme = ";"; t.tokenName = "SEMICOLON"
+    case "EOF": t.lexeme = ""; t.tokenName = "EOF"
+    }
+    if t.tokenName != ""{
+        return t, nil
+    } else {
+        return nil, fmt.Errorf("[line %v] Error: Unexpected character: %v", t.line, lexeme)
+    }
+}
+
+func (t Token)toStr() string{
+    if (t.literal == nil){
+        return t.tokenName + " " + t.lexeme + " " + "null";
+    }
+    return t.tokenName + " " + t.lexeme
 }
