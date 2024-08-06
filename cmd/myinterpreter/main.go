@@ -5,11 +5,6 @@ import (
 	"os"
 )
 
-const (
-    LEFT_PAREN rune = '('
-    RIGHT_PAREN rune = ')'
-)
-
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Fprintln(os.Stderr, "Logs from your program will appear here!")
@@ -37,16 +32,11 @@ func main() {
     
     for _, literal := range fileContents{
         switch literal {
-            case '(': fmt.Println("LEFT_PAREN ( null")
-            case ')': fmt.Println("RIGHT_PAREN ) null")
+        case '(': fmt.Println("LEFT_PAREN ( null")
+        case ')': fmt.Println("RIGHT_PAREN ) null")
+        case '{': fmt.Println("LEFT_BRACE { null")
+        case '}': fmt.Println("RIGHT_BRACE } null")
         }
     }
     fmt.Println("EOF  null")
 }
-
-func tokenize(sourse string){
-
-}
-
-
-
