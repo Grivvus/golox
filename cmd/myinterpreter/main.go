@@ -29,29 +29,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
-    var line uint = 1
-    var tokens []Token
-    var isLexicalError bool
-    for _, literal := range fileContents{
-        if literal == '\n'{
-            line++
-        } else {
-            token, err := newToken(string(literal), line)
-            if err == nil{
-                tokens = append(tokens, *token)
-            } else {
-                isLexicalError = true
-                fmt.Fprintln(os.Stderr, err)
-            }
-        }
-    }
-    for _, token := range tokens{
+
+    tokens, isLexicalError := tokenize(string(fileContents))
+
+    for _, token := range *tokens{
         fmt.Println(token.toStr())
     }
-    token, err := newToken("EOF", 0)
-    if err == nil {
-        fmt.Println(token.toStr())
-    }
+
     if isLexicalError{
         os.Exit(65)
     }
@@ -80,6 +64,8 @@ func newToken(lexeme string, line uint) (*Token, error){
     case "-": t.lexeme = "-"; t.tokenName = "MINUS"
     case "/": t.lexeme = "/"; t.tokenName = "SLASH"
     case ";": t.lexeme = ";"; t.tokenName = "SEMICOLON"
+    case "=": t.lexeme = "="; t.tokenName = "EQUAL"
+    case "==": t.lexeme = "=="; t.tokenName = "EQUAL_EQUAL"
     case "EOF": t.lexeme = ""; t.tokenName = "EOF"
     }
     if t.tokenName != ""{
@@ -94,4 +80,39 @@ func (t Token)toStr() string{
         return t.tokenName + " " + t.lexeme + " " + "null";
     }
     return t.tokenName + " " + t.lexeme
+}
+
+func tokenize(source string) (*[]Token, bool){
+    var line uint = 1
+    var tokens []Token
+    var isLexicalError bool = false
+
+    for i := 0; i < len(source); i++{
+        if source[i] == '\n'{
+            line++
+        } else {
+            if source[i] == '=' && i + 1 < len(source) && source[i+1] == '='{
+                i++
+                token, err := newToken("==", line)
+                if err == nil{
+                    tokens = append(tokens, *token)
+                } else {
+                    isLexicalError = true
+                    fmt.Fprintln(os.Stderr, err)
+                }
+            } else {
+                token, err := newToken(string(source[i]), line)
+                if err == nil{
+                    tokens = append(tokens, *token)
+                } else {
+                    isLexicalError = true
+                    fmt.Fprintln(os.Stderr, err)
+                }
+            }
+        }
+    }
+    token, _ := newToken("EOF", 0)
+    tokens = append(tokens, *token)
+
+    return &tokens, isLexicalError
 }
