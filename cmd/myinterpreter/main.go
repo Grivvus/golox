@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+    "github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	// Uncomment this block to pass the first stage
-	//
+
 	filename := os.Args[2]
 	fileContents, err := os.ReadFile(filename)
 	if err != nil {
@@ -30,89 +31,22 @@ func main() {
 		os.Exit(1)
 	}
 
-    tokens, isLexicalError := tokenize(string(fileContents))
-
-    for _, token := range *tokens{
-        fmt.Println(token.toStr())
-    }
-
-    if isLexicalError{
-        os.Exit(65)
-    }
-}
-
-type Token struct{
-    lexeme string
-    tokenName string
-    literal any
-    line uint
-}
-
-func newToken(lexeme string, line uint) (*Token, error){
-    t := new(Token)
-    t.line = line
-    t.literal = nil
-    switch lexeme{
-    case "(": t.lexeme = "("; t.tokenName = "LEFT_PAREN"
-    case ")": t.lexeme = ")"; t.tokenName = "RIGHT_PAREN"
-    case "{": t.lexeme = "{"; t.tokenName = "LEFT_BRACE"
-    case "}": t.lexeme = "}"; t.tokenName = "RIGHT_BRACE"
-    case "*": t.lexeme = "*"; t.tokenName = "STAR"
-    case ".": t.lexeme = "."; t.tokenName = "DOT"
-    case ",": t.lexeme = ","; t.tokenName = "COMMA"
-    case "+": t.lexeme = "+"; t.tokenName = "PLUS"
-    case "-": t.lexeme = "-"; t.tokenName = "MINUS"
-    case "/": t.lexeme = "/"; t.tokenName = "SLASH"
-    case ";": t.lexeme = ";"; t.tokenName = "SEMICOLON"
-    case "=": t.lexeme = "="; t.tokenName = "EQUAL"
-    case "==": t.lexeme = "=="; t.tokenName = "EQUAL_EQUAL"
-    case "EOF": t.lexeme = ""; t.tokenName = "EOF"
-    }
-    if t.tokenName != ""{
-        return t, nil
-    } else {
-        return nil, fmt.Errorf("[line %v] Error: Unexpected character: %v", t.line, lexeme)
-    }
-}
-
-func (t Token)toStr() string{
-    if (t.literal == nil){
-        return t.tokenName + " " + t.lexeme + " " + "null";
-    }
-    return t.tokenName + " " + t.lexeme
-}
-
-func tokenize(source string) (*[]Token, bool){
-    var line uint = 1
-    var tokens []Token
-    var isLexicalError bool = false
-
-    for i := 0; i < len(source); i++{
-        if source[i] == '\n'{
-            line++
+    scanner := lexer.NewScanner(fileContents)
+    var tokens []lexer.Token
+    token, err := scanner.NextToken()
+    for token == nil || token.Token != lexer.EOF{
+        if err != nil{
+            fmt.Fprintln(os.Stderr, err.Error())
         } else {
-            if source[i] == '=' && i + 1 < len(source) && source[i+1] == '='{
-                i++
-                token, err := newToken("==", line)
-                if err == nil{
-                    tokens = append(tokens, *token)
-                } else {
-                    isLexicalError = true
-                    fmt.Fprintln(os.Stderr, err)
-                }
-            } else {
-                token, err := newToken(string(source[i]), line)
-                if err == nil{
-                    tokens = append(tokens, *token)
-                } else {
-                    isLexicalError = true
-                    fmt.Fprintln(os.Stderr, err)
-                }
-            }
+            tokens = append(tokens, *token)
         }
+        token, err = scanner.NextToken()
     }
-    token, _ := newToken("EOF", 0)
     tokens = append(tokens, *token)
 
-    return &tokens, isLexicalError
+    for _, value := range tokens{
+        fmt.Println(value.String())
+    }
+
+    os.Exit(scanner.ExitCode)
 }
