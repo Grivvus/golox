@@ -72,6 +72,20 @@ func (s *Scanner) NextToken() (*Token, error){
         } else {
             return NewToken("!", BANG, nil), nil
         }
+    case '<':
+        if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '='{
+            s.CurrentIndex++
+            return NewToken("<=", LESS_EQUAL, nil), nil
+        } else {
+            return NewToken("<", LESS, nil), nil
+        }
+    case '>':
+        if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '='{
+            s.CurrentIndex++
+            return NewToken(">=", GREATER_EQUAL, nil), nil
+        } else {
+            return NewToken(">", GREATER, nil), nil
+        }
     default:
         s.ExitCode = 65
         return nil, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))
