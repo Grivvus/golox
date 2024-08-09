@@ -38,7 +38,9 @@ func main() {
         if err != nil{
             fmt.Fprintln(os.Stderr, err.Error())
         } else {
-            tokens = append(tokens, *token)
+            if token != nil{
+                tokens = append(tokens, *token)
+            }
         }
         token, err = scanner.NextToken()
     }

@@ -94,6 +94,12 @@ func (s *Scanner) NextToken() (*Token, error){
         } else {
             return NewToken(">", GREATER, nil), nil
         }
+    case '\t':
+        return nil, nil
+    case ' ':
+        return nil, nil
+    case 10:
+        return nil, nil
     default:
         s.ExitCode = 65
         return nil, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))
