@@ -94,6 +94,23 @@ func (s *Scanner) NextToken() (*Token, error){
         } else {
             return NewToken(">", GREATER, nil), nil
         }
+    case '"':
+        var res_str []rune;
+        for s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] != '"'{
+            if s.Source[s.CurrentIndex] == '\n'{
+                s.CurrentLine++
+            }
+            res_str = append(res_str, rune(s.Source[s.CurrentIndex]))
+            s.CurrentIndex++
+        }
+
+        if s.CurrentIndex < len(s.Source){
+            s.CurrentIndex++
+            return NewToken(string(res_str), STRING, string(res_str)), nil
+        } else {
+            s.ExitCode = 65
+            return nil, errors.New(fmt.Sprintf("[line %v] Error: Unterminated string.", s.CurrentLine))
+        }
     case '\t':
         return nil, nil
     case ' ':
