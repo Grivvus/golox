@@ -137,6 +137,16 @@ func (s *Scanner) NextToken() (*Token, error){
                 digits = append(digits, '0')
             }
             return NewToken(numLiteral, NUMBER, string(digits)), nil
+        } else if isAlpha(char){
+            var identifier []byte
+            identifier = append(identifier, char)
+
+            for s.CurrentIndex < len(s.Source) && isAlphaOrDigit(s.Source[s.CurrentIndex]){
+                identifier = append(identifier, s.Source[s.CurrentIndex])
+                s.CurrentIndex++
+            }
+
+            return NewToken(string(identifier), IDENTIFIER, nil), nil
         }
         s.ExitCode = 65
         return nil, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))
@@ -148,4 +158,15 @@ func isDigit(char byte) bool {
         return true
     }
     return false
+}
+
+func isAlpha(char byte) bool {
+    if char == '_' || (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z'){
+        return true
+    }
+    return false
+}
+
+func isAlphaOrDigit(char byte) bool {
+    return isDigit(char) || isAlpha(char)
 }

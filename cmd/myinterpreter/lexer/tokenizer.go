@@ -28,6 +28,7 @@ const (
     GREATER_EQUAL
     STRING
     NUMBER
+    IDENTIFIER
 )
 
 func (tt TokenType) String() string{
@@ -36,7 +37,7 @@ return [...]string{
         "STAR", "DOT", "COMMA", "PLUS", "MINUS", "SLASH", "SEMICOLON",
         "EQUAL", "EQUAL_EQUAL", "BANG", "BANG_EQUAL",
         "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL",
-        "STRING", "NUMBER",
+        "STRING", "NUMBER", "IDENTIFIER",
     }[tt]
 }
 
