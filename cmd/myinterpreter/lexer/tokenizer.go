@@ -27,6 +27,7 @@ const (
     GREATER
     GREATER_EQUAL
     STRING
+    NUMBER
 )
 
 func (tt TokenType) String() string{
@@ -35,7 +36,7 @@ return [...]string{
         "STAR", "DOT", "COMMA", "PLUS", "MINUS", "SLASH", "SEMICOLON",
         "EQUAL", "EQUAL_EQUAL", "BANG", "BANG_EQUAL",
         "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL",
-        "STRING",
+        "STRING", "NUMBER",
     }[tt]
 }
 
@@ -57,8 +58,9 @@ func NewToken(lexeme string, token TokenType, literal any) *Token{
 func (t *Token) String() string{
     var s string
     if t.Token == STRING{
-        s = fmt.Sprintf("%s \"%s\" ", t.Token, t.Lexeme)
-        s += t.Lexeme
+        s = fmt.Sprintf("%v %v %v", t.Token, t.Lexeme, t.Literal)
+    } else if t.Token == NUMBER {
+        s = fmt.Sprintf("%v %v %v", t.Token, t.Lexeme, t.Literal)
     } else {
         s = fmt.Sprintf("%s %s ", t.Token, t.Lexeme)
     }

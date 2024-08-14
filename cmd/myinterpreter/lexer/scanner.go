@@ -96,17 +96,14 @@ func (s *Scanner) NextToken() (*Token, error){
         }
     case '"':
         var res_str []rune;
-        for s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] != '"'{
-            if s.Source[s.CurrentIndex] == '\n'{
-                s.CurrentLine++
-            }
+        for s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] != '"' && s.Source[s.CurrentIndex] != '\n'{
             res_str = append(res_str, rune(s.Source[s.CurrentIndex]))
             s.CurrentIndex++
         }
 
-        if s.CurrentIndex < len(s.Source){
+        if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '"'{
             s.CurrentIndex++
-            return NewToken(string(res_str), STRING, string(res_str)), nil
+            return NewToken("\"" + string(res_str) + "\"", STRING, string(res_str)), nil
         } else {
             s.ExitCode = 65
             return nil, errors.New(fmt.Sprintf("[line %v] Error: Unterminated string.", s.CurrentLine))
@@ -116,9 +113,39 @@ func (s *Scanner) NextToken() (*Token, error){
     case ' ':
         return nil, nil
     case 10:
+        // line feed ASCII code 10
         return nil, nil
     default:
+        if isDigit(char){
+            var digits []byte
+            var isFloat bool = false
+            
+            digits = append(digits, char)
+            for s.CurrentIndex < len(s.Source) && (isDigit(s.Source[s.CurrentIndex]) || (s.CurrentIndex < len(s.Source) - 1 && s.Source[s.CurrentIndex] == '.' && isDigit(s.Source[s.CurrentIndex + 1]))){
+                if s.Source[s.CurrentIndex] == '.' && isFloat == false{
+                    isFloat = true
+                } else if s.Source[s.CurrentIndex] == '.'{
+                    break
+                }
+                digits = append(digits, s.Source[s.CurrentIndex])
+                s.CurrentIndex++
+            }
+            
+            numLiteral := string(digits)
+            if !isFloat {
+                digits = append(digits, '.')
+                digits = append(digits, '0')
+            }
+            return NewToken(numLiteral, NUMBER, string(digits)), nil
+        }
         s.ExitCode = 65
         return nil, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))
     }
+}
+
+func isDigit(char byte) bool {
+    if char >= '0' && char <= '9'{
+        return true
+    }
+    return false
 }
