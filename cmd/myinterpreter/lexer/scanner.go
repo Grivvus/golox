@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+var reservedWords map[string]TokenType
+
 type Scanner struct{
     Source []byte
     ExitCode int
@@ -19,6 +21,7 @@ func NewScanner(source []byte) *Scanner{
     scanner.CurrentIndex = 0
     scanner.CurrentLine = 1
     scanner.ExitCode = 0
+    reservedWords = *fillMap()
 
     return scanner
 }
@@ -151,7 +154,12 @@ func (s *Scanner) NextToken() (*Token, error){
                 s.CurrentIndex++
             }
 
-            return NewToken(string(identifier), IDENTIFIER, nil), nil
+            reserved := reservedWords[string(identifier)]
+            if reserved == EOF{
+                return NewToken(string(identifier), IDENTIFIER, nil), nil
+            }
+            return NewToken(string(identifier), reserved, nil), nil
+
         }
         s.ExitCode = 65
         return nil, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))

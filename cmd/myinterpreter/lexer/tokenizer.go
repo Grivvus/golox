@@ -29,7 +29,46 @@ const (
     STRING
     NUMBER
     IDENTIFIER
+    AND
+    OR
+    CLASS
+    SUPER
+    THIS
+    IF
+    ELSE
+    TRUE
+    FALSE
+    FOR
+    WHILE
+    FUN
+    RETURN
+    NIL
+    PRINT
+    VAR
 )
+
+func fillMap() *map[string]TokenType{
+    res := map[string]TokenType{
+        "and": AND,
+        "or": OR,
+        "class": CLASS,
+        "super": SUPER,
+        "this": THIS,
+        "if": IF,
+        "else": ELSE,
+        "true": TRUE,
+        "false": FALSE,
+        "for": FOR,
+        "while": WHILE,
+        "fun": FUN,
+        "return": RETURN,
+        "nil": NIL,
+        "print": PRINT,
+        "var": VAR,
+    }
+
+    return &res
+}
 
 func (tt TokenType) String() string{
 return [...]string{
@@ -37,7 +76,9 @@ return [...]string{
         "STAR", "DOT", "COMMA", "PLUS", "MINUS", "SLASH", "SEMICOLON",
         "EQUAL", "EQUAL_EQUAL", "BANG", "BANG_EQUAL",
         "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL",
-        "STRING", "NUMBER", "IDENTIFIER",
+        "STRING", "NUMBER", "IDENTIFIER", "AND", "OR",
+        "CLASS", "SUPER", "THIS", "IF", "ELSE", "TRUE", "FALSE",
+        "FOR", "WHILE", "FUN", "RETURN", "NIL", "PRINT", "VAR",
     }[tt]
 }
 
@@ -64,6 +105,7 @@ func (t *Token) String() string{
     } else {
         switch v := t.Literal.(type) {
         case float64:
+            // wtf golang??!!
             if v == float64(int(v)){
                 literalStr = fmt.Sprintf("%.1f", v)
             } else {
