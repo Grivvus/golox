@@ -2,7 +2,8 @@ package lexer
 
 import (
 	"errors"
-    "fmt"
+	"fmt"
+	"strconv"
 )
 
 type Scanner struct{
@@ -136,7 +137,11 @@ func (s *Scanner) NextToken() (*Token, error){
                 digits = append(digits, '.')
                 digits = append(digits, '0')
             }
-            return NewToken(numLiteral, NUMBER, string(digits)), nil
+            parsed, err := strconv.ParseFloat(string(digits), 64)
+            if err != nil{
+                return nil, errors.New("Can't parse NUMBER")
+            }
+            return NewToken(numLiteral, NUMBER, parsed), nil
         } else if isAlpha(char){
             var identifier []byte
             identifier = append(identifier, char)

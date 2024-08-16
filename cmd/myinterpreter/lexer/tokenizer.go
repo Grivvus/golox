@@ -57,17 +57,23 @@ func NewToken(lexeme string, token TokenType, literal any) *Token{
 }
 
 func (t *Token) String() string{
-    var s string
-    if t.Token == STRING{
-        s = fmt.Sprintf("%v %v %v", t.Token, t.Lexeme, t.Literal)
-    } else if t.Token == NUMBER {
-        s = fmt.Sprintf("%v %v %v", t.Token, t.Lexeme, t.Literal)
-    } else {
-        s = fmt.Sprintf("%s %s ", t.Token, t.Lexeme)
-    }
+    var literalStr string
+    
     if t.Literal == nil{
-        s += "null"
+        literalStr = "null"
+    } else {
+        switch v := t.Literal.(type) {
+        case float64:
+            if v == float64(int(v)){
+                literalStr = fmt.Sprintf("%.1f", v)
+            } else {
+                literalStr = fmt.Sprintf("%v", v)
+            }
+        default:
+            literalStr = fmt.Sprintf("%v", v)
+        }
     }
+    s := fmt.Sprintf("%v %v %v", t.Token, t.Lexeme, literalStr)
 
     return s
 }
