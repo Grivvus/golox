@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-    "github.com/codecrafters-io/interpreter-starter-go/cmd/myinterpreter/lexer"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 
 	command := os.Args[1]
 
-	if command != "tokenize" {
+	if command != "tokenize" && command != "parse"{
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
 	}
@@ -31,24 +30,38 @@ func main() {
 		os.Exit(1)
 	}
 
-    scanner := lexer.NewScanner(fileContents)
-    var tokens []lexer.Token
-    token, err := scanner.NextToken()
-    for token == nil || token.Token != lexer.EOF{
-        if err != nil{
-            fmt.Fprintln(os.Stderr, err.Error())
-        } else {
-            if token != nil{
-                tokens = append(tokens, *token)
-            }
-        }
-        token, err = scanner.NextToken()
-    }
+	scanner := NewScanner(fileContents)
+	var tokens []Token
+	token, err := scanner.NextToken()
+	for token == nil || token.Token != EOF {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+		} else {
+			if token != nil {
+				tokens = append(tokens, *token)
+			}
+		}
+		token, err = scanner.NextToken()
+	}
     tokens = append(tokens, *token)
 
-    for _, value := range tokens{
-        fmt.Println(value.String())
-    }
+    if command == "tokenize"{
+	    for _, value := range tokens {
+		    fmt.Println(value.String())
+	    }
+	} else if command == "parse"{
+	    parser := NewParser(tokens)
+        expressions := make([]Expr, 0, 1)
+        printer := new(astPrinter)
+        expr, err := parser.nextExpr()
+        for err == nil {
+            expressions = append(expressions, expr)
+            expr, err = parser.nextExpr()
+        }
+        for _, v := range expressions{
+            printer.print(v)
+        }
+	}
 
-    os.Exit(scanner.ExitCode)
+	os.Exit(scanner.ExitCode)
 }
