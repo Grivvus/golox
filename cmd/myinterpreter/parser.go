@@ -41,6 +41,8 @@ func literalExpr(token Token) (*LiteralExpr, error){
         return NewLiteralExpr(nil), nil
     } else if token.Token == NUMBER{
         return NewLiteralExpr(token.Literal), nil
+    } else if token.Token == STRING{
+        return NewLiteralExpr(token.Literal), nil
     }
     return nil, errors.New("can't parse literal expr")
 }
