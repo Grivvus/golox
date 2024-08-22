@@ -22,7 +22,7 @@ func (p *Parser) nextExpr() (Expr, error){
     }
     token := p.tokens[p.currentIndex]
     p.currentIndex++
-    if token.Token == TRUE || token.Token == FALSE || token.Token == NIL{
+    if token.Token == TRUE || token.Token == FALSE || token.Token == NIL || token.Token == NUMBER || token.Token == STRING{
         return literalExpr(token)
     }
     return nil, errors.New("unknown expr")
@@ -39,6 +39,8 @@ func literalExpr(token Token) (*LiteralExpr, error){
         return NewLiteralExpr(false), nil
     } else if token.Token == NIL{
         return NewLiteralExpr(nil), nil
+    } else if token.Token == NUMBER{
+        return NewLiteralExpr(token.Literal), nil
     }
     return nil, errors.New("can't parse literal expr")
 }

@@ -52,5 +52,11 @@ func (printer astPrinter) visitLiteralExpr(expr LiteralExpr) string{
     if expr.value == nil{
         return "nil"
     }
+    switch v := expr.value.(type) {
+    case float64:
+        if expr.value == float64(int(v)){
+            return fmt.Sprintf("%.1f", expr.value)
+        }
+    }
     return fmt.Sprint(expr.value) 
 }

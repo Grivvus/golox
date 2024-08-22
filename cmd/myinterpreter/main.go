@@ -58,6 +58,10 @@ func main() {
             expressions = append(expressions, expr)
             expr, err = parser.nextExpr()
         }
+        if err.Error() != "EOF"{
+            fmt.Println(err)
+            os.Exit(-1)
+        }
         for _, v := range expressions{
             printer.print(v)
         }
