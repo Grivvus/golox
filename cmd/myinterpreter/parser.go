@@ -35,7 +35,13 @@ func (p *Parser) nextExpr() (Expr, error) {
 			p.currentIndex++
 		}
 		return groupExpr(e)
-	}
+	} else if token.Token == BANG || token.Token == MINUS {
+        right, err := p.nextExpr()
+        if err != nil {
+            return nil, errors.New("can't parse unray expression")
+        }
+        return unaryExpr(token, right)
+    }
 	return nil, errors.New("unknown expr")
 }
 
@@ -60,4 +66,8 @@ func literalExpr(token Token) (*LiteralExpr, error) {
 
 func groupExpr(expr Expr) (*GroupingExpr, error) {
 	return NewGroupingExpr(expr), nil
+}
+
+func unaryExpr(operator Token, expr Expr) (*UnaryExpr, error) {
+    return NewUnaryExpr(operator, expr), nil
 }

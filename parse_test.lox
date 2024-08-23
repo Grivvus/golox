@@ -10,3 +10,5 @@ true false nil
 "string1"
 "string2"
 "string 3 string 3.5"
+("string")
+(nil)
