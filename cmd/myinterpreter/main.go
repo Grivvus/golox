@@ -16,7 +16,7 @@ func main() {
 
 	command := os.Args[1]
 
-	if command != "tokenize" && command != "parse"{
+	if command != "tokenize" && command != "parse" {
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
 	}
@@ -43,28 +43,28 @@ func main() {
 		}
 		token, err = scanner.NextToken()
 	}
-    tokens = append(tokens, *token)
+	tokens = append(tokens, *token)
 
-    if command == "tokenize"{
-	    for _, value := range tokens {
-		    fmt.Println(value.String())
-	    }
-	} else if command == "parse"{
-	    parser := NewParser(tokens)
-        expressions := make([]Expr, 0, 1)
-        printer := new(astPrinter)
-        expr, err := parser.nextExpr()
-        for err == nil {
-            expressions = append(expressions, expr)
-            expr, err = parser.nextExpr()
-        }
-        if err.Error() != "EOF"{
-            fmt.Println(err)
-            os.Exit(-1)
-        }
-        for _, v := range expressions{
-            printer.print(v)
-        }
+	if command == "tokenize" {
+		for _, value := range tokens {
+			fmt.Println(value.String())
+		}
+	} else if command == "parse" {
+		parser := NewParser(tokens)
+		expressions := make([]Expr, 0, 1)
+		printer := new(astPrinter)
+		expr, err := parser.nextExpr()
+		for err == nil {
+			expressions = append(expressions, expr)
+			expr, err = parser.nextExpr()
+		}
+		if err.Error() != "EOF" {
+			fmt.Fprintln(os.Stderr, err.Error())
+            os.Exit(65)
+		}
+		for _, v := range expressions {
+			printer.print(v)
+		}
 	}
 
 	os.Exit(scanner.ExitCode)
