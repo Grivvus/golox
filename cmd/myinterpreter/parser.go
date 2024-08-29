@@ -125,7 +125,17 @@ func (p *Parser) factor() (Expr, error){
 }
 
 func (p *Parser) term() (Expr, error) {
-    return p.factor()
+    expr, err := p.factor()
+    if err != nil {
+        fmt.Fprintln(os.Stderr, err)
+        os.Exit(1)
+    }
+    for p.match(PLUS, MINUS)  {
+        operator := p.getPrev()
+        right, _ := p.factor()
+        expr = NewBinaryExpr(expr, operator, right)
+    }
+    return expr, nil
 }
 
 func (p *Parser) comparison() (Expr, error){
