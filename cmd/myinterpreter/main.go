@@ -44,26 +44,19 @@ func main() {
 		token, err = scanner.NextToken()
 	}
 	tokens = append(tokens, *token)
-
 	if command == "tokenize" {
 		for _, value := range tokens {
 			fmt.Println(value.String())
 		}
 	} else if command == "parse" {
 		parser := NewParser(tokens)
-		expressions := make([]Expr, 0, 1)
-		printer := new(astPrinter)
-		expr, err := parser.nextExpr()
-		for err == nil {
-			expressions = append(expressions, expr)
-			expr, err = parser.nextExpr()
+		parser.parse()
+		printer := NewPrinter()
+		for _, v := range parser.errs {
+			fmt.Fprintln(os.Stderr, v)
 		}
-		if err.Error() != "EOF" {
-			fmt.Fprintln(os.Stderr, err.Error())
-            os.Exit(65)
-		}
-		for _, v := range expressions {
-			printer.print(v)
+		for _, v := range parser.exprs {
+			fmt.Println(v.accept(printer))
 		}
 	}
 
