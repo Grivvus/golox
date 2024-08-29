@@ -139,25 +139,33 @@ func (p *Parser) term() (Expr, error) {
 }
 
 func (p *Parser) comparison() (Expr, error){
-    return p.term()
+    expr, err := p.term()
+    if err != nil {
+        fmt.Fprintln(os.Stderr, err)
+        os.Exit(1)
+    }
+    for p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
+        operator := p.getPrev()
+        right, _ := p.term()
+        expr = NewBinaryExpr(expr, operator, right)
+    }
+    return expr, nil
 }
 
 func (p *Parser) equality() (Expr, error){
-    return p.comparison()
-}
-
-func (p *Parser) and() (Expr, error){
-    return p.equality()
-}
-
-func (p *Parser) or() (Expr, error){
-    return p.and()
-}
-
-func (p *Parser) assignment() (Expr, error){
-    return p.or()
+    expr, err := p.comparison()
+    if err !=  nil {
+        fmt.Fprintln(os.Stderr, err)
+        os.Exit(1)
+    }
+    for p.match(EQUAL_EQUAL, BANG_EQUAL) {
+        operator := p.getPrev()
+        right, _ := p.comparison()
+        expr = NewBinaryExpr(expr, operator, right)
+    }
+    return expr, nil
 }
 
 func (p *Parser) nextExpr() (Expr, error) {
-    return p.assignment()
+    return p.equality()
 }
