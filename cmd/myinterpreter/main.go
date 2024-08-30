@@ -50,9 +50,9 @@ func main() {
 		}
 		os.Exit(scanner.ExitCode)
 	} else if command == "parse" {
-        if scanner.ExitCode != 0 {
-            os.Exit(scanner.ExitCode)
-        }
+		if scanner.ExitCode != 0 {
+			os.Exit(scanner.ExitCode)
+		}
 		parser := NewParser(tokens)
 		parser.parse()
 		printer := NewPrinter()
