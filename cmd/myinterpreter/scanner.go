@@ -41,7 +41,7 @@ func (s *Scanner) NextToken() (*Token, error) {
 	}
 
 	if s.CurrentIndex >= len(s.Source) {
-		return NewToken("", EOF, nil), nil
+		return NewToken("", EOF, nil, s.CurrentLine), nil
 	}
 
 	char := s.Source[s.CurrentIndex]
@@ -49,54 +49,54 @@ func (s *Scanner) NextToken() (*Token, error) {
 
 	switch char {
 	case '(':
-		return NewToken("(", LEFT_PAREN, nil), nil
+		return NewToken("(", LEFT_PAREN, nil, s.CurrentLine), nil
 	case ')':
-		return NewToken(")", RIGHT_PAREN, nil), nil
+		return NewToken(")", RIGHT_PAREN, nil, s.CurrentLine), nil
 	case '{':
-		return NewToken("{", LEFT_BRACE, nil), nil
+		return NewToken("{", LEFT_BRACE, nil, s.CurrentLine), nil
 	case '}':
-		return NewToken("}", RIGHT_BRACE, nil), nil
+		return NewToken("}", RIGHT_BRACE, nil, s.CurrentLine), nil
 	case '*':
-		return NewToken("*", STAR, nil), nil
+		return NewToken("*", STAR, nil, s.CurrentLine), nil
 	case '.':
-		return NewToken(".", DOT, nil), nil
+		return NewToken(".", DOT, nil, s.CurrentLine), nil
 	case ',':
-		return NewToken(",", COMMA, nil), nil
+		return NewToken(",", COMMA, nil, s.CurrentLine), nil
 	case '+':
-		return NewToken("+", PLUS, nil), nil
+		return NewToken("+", PLUS, nil, s.CurrentLine), nil
 	case '-':
-		return NewToken("-", MINUS, nil), nil
+		return NewToken("-", MINUS, nil, s.CurrentLine), nil
 	case '/':
-		return NewToken("/", SLASH, nil), nil
+		return NewToken("/", SLASH, nil, s.CurrentLine), nil
 	case ';':
-		return NewToken(";", SEMICOLON, nil), nil
+		return NewToken(";", SEMICOLON, nil, s.CurrentLine), nil
 	case '=':
 		if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '=' {
 			s.CurrentIndex++
-			return NewToken("==", EQUAL_EQUAL, nil), nil
+			return NewToken("==", EQUAL_EQUAL, nil, s.CurrentLine), nil
 		} else {
-			return NewToken("=", EQUAL, nil), nil
+			return NewToken("=", EQUAL, nil, s.CurrentLine), nil
 		}
 	case '!':
 		if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '=' {
 			s.CurrentIndex++
-			return NewToken("!=", BANG_EQUAL, nil), nil
+			return NewToken("!=", BANG_EQUAL, nil, s.CurrentLine), nil
 		} else {
-			return NewToken("!", BANG, nil), nil
+			return NewToken("!", BANG, nil, s.CurrentLine), nil
 		}
 	case '<':
 		if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '=' {
 			s.CurrentIndex++
-			return NewToken("<=", LESS_EQUAL, nil), nil
+			return NewToken("<=", LESS_EQUAL, nil, s.CurrentLine), nil
 		} else {
-			return NewToken("<", LESS, nil), nil
+			return NewToken("<", LESS, nil, s.CurrentLine), nil
 		}
 	case '>':
 		if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '=' {
 			s.CurrentIndex++
-			return NewToken(">=", GREATER_EQUAL, nil), nil
+			return NewToken(">=", GREATER_EQUAL, nil, s.CurrentLine), nil
 		} else {
-			return NewToken(">", GREATER, nil), nil
+			return NewToken(">", GREATER, nil, s.CurrentLine), nil
 		}
 	case '"':
 		var res_str []rune
@@ -107,7 +107,7 @@ func (s *Scanner) NextToken() (*Token, error) {
 
 		if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '"' {
 			s.CurrentIndex++
-			return NewToken("\""+string(res_str)+"\"", STRING, string(res_str)), nil
+			return NewToken("\""+string(res_str)+"\"", STRING, string(res_str), s.CurrentLine), nil
 		} else {
 			s.ExitCode = 65
 			return nil, errors.New(fmt.Sprintf("[line %v] Error: Unterminated string.", s.CurrentLine))
@@ -144,7 +144,7 @@ func (s *Scanner) NextToken() (*Token, error) {
 			if err != nil {
 				return nil, errors.New("Can't parse NUMBER")
 			}
-			return NewToken(numLiteral, NUMBER, parsed), nil
+			return NewToken(numLiteral, NUMBER, parsed, s.CurrentLine), nil
 		} else if isAlpha(char) {
 			var identifier []byte
 			identifier = append(identifier, char)
@@ -156,9 +156,9 @@ func (s *Scanner) NextToken() (*Token, error) {
 
 			reserved := reservedWords[string(identifier)]
 			if reserved == EOF {
-				return NewToken(string(identifier), IDENTIFIER, nil), nil
+				return NewToken(string(identifier), IDENTIFIER, nil, s.CurrentLine), nil
 			}
-			return NewToken(string(identifier), reserved, nil), nil
+			return NewToken(string(identifier), reserved, nil, s.CurrentLine), nil
 
 		}
 		s.ExitCode = 65

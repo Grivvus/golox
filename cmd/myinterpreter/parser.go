@@ -10,6 +10,7 @@ type Parser struct {
 	tokens       []Token
 	exprs        []Expr
 	errs         []error
+    exitCode int
 	currentIndex int
 }
 
@@ -19,17 +20,16 @@ func NewParser(tokens []Token) *Parser {
 	p.exprs = make([]Expr, 0, 1)
 	p.errs = make([]error, 0, 1)
 	p.currentIndex = 0
+    p.exitCode = 0
 	return p
 }
 
 func (p *Parser) parse() []Expr {
 	for !p.isAtEnd() {
-		expr, err := p.nextExpr()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(0)
-		}
-		p.exprs = append(p.exprs, expr)
+		expr := p.nextExpr()
+        if expr != nil {
+		    p.exprs = append(p.exprs, expr)
+        }
 	}
 	return p.exprs
 }
@@ -67,105 +67,115 @@ func (p *Parser) incrIndex() Token {
 	return p.getPrev()
 }
 
-func (p *Parser) literalExpr() (*LiteralExpr, error) {
+func (p *Parser) literalExpr() Expr  {
 	if p.match(TRUE) {
-		return NewLiteralExpr(true), nil
+		return NewLiteralExpr(true)
 	} else if p.match(FALSE) {
-		return NewLiteralExpr(false), nil
+		return NewLiteralExpr(false)
 	} else if p.match(NIL) {
-		return NewLiteralExpr(nil), nil
+		return NewLiteralExpr(nil)
 	} else if p.match(STRING, NUMBER) {
-		return NewLiteralExpr(p.getPrev().Literal), nil
+		return NewLiteralExpr(p.getPrev().Literal)
 	}
-	return nil, errors.New("Unknown expr")
+    p.currentIndex++
+    p.exitCode = 65
+    fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v': Expect expression.", p.getCurrent().line, p.getCurrent().Lexeme))
+    return nil
 }
 
-func (p *Parser) group() (Expr, error){
+func (p *Parser) group() Expr {
     if p.match(LEFT_PAREN) {
-        expr, err := p.nextExpr()
-        if err != nil {
-            fmt.Fprintln(os.Stderr, err)
-            os.Exit(1)
+        expr := p.nextExpr()
+        if expr == nil {
+            return nil
         }
         if !p.check(RIGHT_PAREN){
+            p.exitCode = 65
             fmt.Fprintln(os.Stderr, errors.New("Expect ) after expression"))
-            os.Exit(1)
+        } else {
+            p.currentIndex++
         }
-        p.currentIndex++
-        return NewGroupingExpr(expr), nil
+        return NewGroupingExpr(expr)
     }
     return p.literalExpr()
 }
 
-func (p *Parser) unary() (Expr, error){
+func (p *Parser) unary() Expr {
     if p.match(MINUS, BANG) {
         token := p.getPrev()
-        expr, err := p.unary()
-        if err != nil {
-            fmt.Fprintln(os.Stderr, err)
-            os.Exit(1)
+        expr := p.unary()
+        if expr == nil {
+            return nil
         }
-        return NewUnaryExpr(token, expr), nil
+        return NewUnaryExpr(token, expr)
     }
     return p.group()
 }
 
-func (p *Parser) factor() (Expr, error){
-    expr, err := p.unary()
-    if err != nil {
-        fmt.Fprintln(os.Stderr, err)
-        os.Exit(1)
+func (p *Parser) factor() Expr {
+    expr := p.unary()
+    if expr == nil {
+        return nil
     }
     for p.match(STAR, SLASH) {
         operator := p.getPrev()
-        right, _ := p.unary()
+        right := p.unary()
+        if right == nil {
+            return nil
+        }
         expr = NewBinaryExpr(expr, operator, right)
     }
-    return expr, nil
+    return expr
 }
 
-func (p *Parser) term() (Expr, error) {
-    expr, err := p.factor()
-    if err != nil {
-        fmt.Fprintln(os.Stderr, err)
-        os.Exit(1)
+func (p *Parser) term() Expr  {
+    expr := p.factor()
+    if expr == nil {
+        return nil
     }
     for p.match(PLUS, MINUS)  {
         operator := p.getPrev()
-        right, _ := p.factor()
+        right := p.factor()
+        if right == nil {
+            return nil
+        }
         expr = NewBinaryExpr(expr, operator, right)
     }
-    return expr, nil
+    return expr
 }
 
-func (p *Parser) comparison() (Expr, error){
-    expr, err := p.term()
-    if err != nil {
-        fmt.Fprintln(os.Stderr, err)
-        os.Exit(1)
+func (p *Parser) comparison() Expr {
+    expr := p.term()
+    if expr == nil {
+        return nil
     }
     for p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
         operator := p.getPrev()
-        right, _ := p.term()
+        right := p.term()
+        if right == nil {
+            return nil
+        }
         expr = NewBinaryExpr(expr, operator, right)
     }
-    return expr, nil
+    return expr
 }
 
-func (p *Parser) equality() (Expr, error){
-    expr, err := p.comparison()
-    if err !=  nil {
-        fmt.Fprintln(os.Stderr, err)
-        os.Exit(1)
+func (p *Parser) equality() Expr {
+    expr := p.comparison()
+    if expr == nil {
+        return nil
     }
     for p.match(EQUAL_EQUAL, BANG_EQUAL) {
         operator := p.getPrev()
-        right, _ := p.comparison()
+        right := p.comparison()
+        if right == nil {
+            return nil
+        }
         expr = NewBinaryExpr(expr, operator, right)
     }
-    return expr, nil
+    return expr
 }
 
-func (p *Parser) nextExpr() (Expr, error) {
+func (p *Parser) nextExpr() Expr  {
     return p.equality()
 }

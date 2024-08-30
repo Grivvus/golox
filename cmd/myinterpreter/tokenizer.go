@@ -85,13 +85,15 @@ type Token struct {
 	Lexeme  string
 	Token   TokenType
 	Literal any
+    line uint
 }
 
-func NewToken(lexeme string, token TokenType, literal any) *Token {
+func NewToken(lexeme string, token TokenType, literal any, line uint) *Token {
 	t := new(Token)
 	t.Lexeme = lexeme
 	t.Token = token
 	t.Literal = literal
+    t.line = line
 
 	return t
 }

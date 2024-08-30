@@ -48,7 +48,11 @@ func main() {
 		for _, value := range tokens {
 			fmt.Println(value.String())
 		}
+		os.Exit(scanner.ExitCode)
 	} else if command == "parse" {
+        if scanner.ExitCode != 0 {
+            os.Exit(scanner.ExitCode)
+        }
 		parser := NewParser(tokens)
 		parser.parse()
 		printer := NewPrinter()
@@ -58,7 +62,7 @@ func main() {
 		for _, v := range parser.exprs {
 			fmt.Println(v.accept(printer))
 		}
+		os.Exit(parser.exitCode)
 	}
 
-	os.Exit(scanner.ExitCode)
 }
