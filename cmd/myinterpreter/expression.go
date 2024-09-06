@@ -1,7 +1,15 @@
 package main
 
+type visitor[T string|any] interface {
+	visitUnaryExpr(UnaryExpr) T
+	visitBinaryExpr(BinaryExpr) T
+	visitGroupingExpr(GroupingExpr) T
+	visitLiteralExpr(LiteralExpr) T
+}
+
 type Expr interface {
-	accept(v visitor) string
+	print(v visitor[string]) string
+    accept(v visitor[any]) any
 }
 
 type UnaryExpr struct {
@@ -16,8 +24,12 @@ func NewUnaryExpr(operator Token, right Expr) *UnaryExpr {
 	return unary
 }
 
-func (unary *UnaryExpr) accept(v visitor) string {
+func (unary *UnaryExpr) print(v visitor[string]) string {
 	return v.visitUnaryExpr(*unary)
+}
+
+func (unary *UnaryExpr) accept(v visitor[any]) any {
+    return v.visitUnaryExpr(*unary)
 }
 
 type BinaryExpr struct {
@@ -34,8 +46,12 @@ func NewBinaryExpr(left Expr, operator Token, right Expr) *BinaryExpr {
 	return bin
 }
 
-func (binary *BinaryExpr) accept(v visitor) string {
+func (binary *BinaryExpr) print(v visitor[string]) string {
 	return v.visitBinaryExpr(*binary)
+}
+
+func (binary *BinaryExpr) accept(v visitor[any]) any{
+    return v.visitBinaryExpr(*binary)
 }
 
 type GroupingExpr struct {
@@ -48,8 +64,12 @@ func NewGroupingExpr(expr Expr) *GroupingExpr {
 	return g
 }
 
-func (grouping *GroupingExpr) accept(v visitor) string {
+func (grouping *GroupingExpr) print(v visitor[string]) string {
 	return v.visitGroupingExpr(*grouping)
+}
+
+func (grouping *GroupingExpr) accept(v visitor[any]) any{
+    return v.visitGroupingExpr(*grouping)
 }
 
 type LiteralExpr struct {
@@ -62,6 +82,10 @@ func NewLiteralExpr(value any) *LiteralExpr {
 	return lit
 }
 
-func (literal *LiteralExpr) accept(v visitor) string {
+func (literal *LiteralExpr) print(v visitor[string]) string {
 	return v.visitLiteralExpr(*literal)
+}
+
+func (literal *LiteralExpr) accept(v visitor[any]) any{
+    return v.visitLiteralExpr(*literal)
 }

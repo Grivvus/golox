@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-type visitor interface {
-	visitUnaryExpr(UnaryExpr) string
-	visitBinaryExpr(BinaryExpr) string
-	visitGroupingExpr(GroupingExpr) string
-	visitLiteralExpr(LiteralExpr) string
-}
 
 type astPrinter struct {
 }
@@ -20,7 +14,7 @@ func NewPrinter() *astPrinter {
 }
 
 func (printer *astPrinter) print(e Expr) {
-	fmt.Println(e.accept(printer))
+	fmt.Println(e.print(printer))
 }
 
 func (printer *astPrinter) parenthesize(name string, exprs ...Expr) string {
@@ -29,7 +23,7 @@ func (printer *astPrinter) parenthesize(name string, exprs ...Expr) string {
 	builder.WriteString(name)
 	for _, expr := range exprs {
 		builder.WriteString(" ")
-		builder.WriteString(expr.accept(printer))
+		builder.WriteString(expr.print(printer))
 	}
 	builder.WriteString(")")
 	return builder.String()
