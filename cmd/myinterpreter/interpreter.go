@@ -45,6 +45,14 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
         }
     case MINUS:
         return left.(float64) - right.(float64)
+    case GREATER:
+        return left.(float64) > right.(float64)
+    case GREATER_EQUAL:
+        return left.(float64) >= right.(float64)
+    case LESS:
+        return left.(float64) < right.(float64)
+    case LESS_EQUAL:
+        return left.(float64) <= right.(float64)
     }
 
     return nil
