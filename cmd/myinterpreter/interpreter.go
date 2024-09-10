@@ -28,7 +28,21 @@ func (i Interpreter) visitUnaryExpr(expr UnaryExpr) any {
 }
 
 func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
-	return 1
+    left := i.evaluate(expr.left)
+    right := i.evaluate(expr.right)
+
+    switch expr.operator.Token {
+    case STAR:
+        return left.(float64) * right.(float64)
+    case SLASH:
+        return left.(float64) / right.(float64)
+    case PLUS:
+        return left.(float64) + right.(float64)
+    case MINUS:
+        return left.(float64) - right.(float64)
+    }
+
+    return nil
 }
 
 func (i Interpreter) evaluate(expr Expr) any {
