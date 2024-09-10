@@ -11,7 +11,7 @@ func (i Interpreter) visitLiteralExpr(expr LiteralExpr) any{
 }
 
 func (i Interpreter) visitGroupingExpr(expr GroupingExpr) any {
-    return i.evaluate(&expr)
+    return i.evaluate(expr.expr)
 }
 
 func (i Interpreter) visitUnaryExpr(expr UnaryExpr) any {
