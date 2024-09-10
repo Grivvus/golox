@@ -37,7 +37,12 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
     case SLASH:
         return left.(float64) / right.(float64)
     case PLUS:
-        return left.(float64) + right.(float64)
+        switch left.(type) {
+        case float64:
+            return left.(float64) + right.(float64)
+        case string:
+            return left.(string) + right.(string)
+        }
     case MINUS:
         return left.(float64) - right.(float64)
     }
