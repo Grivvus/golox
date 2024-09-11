@@ -46,9 +46,17 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
 
 	switch expr.operator.Token {
 	case STAR:
-		return left.(float64) * right.(float64)
+        if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
+		    return left.(float64) * right.(float64)
+        }
+        fmt.Fprintln(os.Stderr, "Operands must be a numbers.")
+        os.Exit(70)
 	case SLASH:
-		return left.(float64) / right.(float64)
+        if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
+		    return left.(float64) / right.(float64)
+        }
+        fmt.Fprintln(os.Stderr, "Operands must be a numbers.")
+        os.Exit(70) 
 	case PLUS:
         left_type := reflect.TypeOf(left)
         right_type := reflect.TypeOf(right)
