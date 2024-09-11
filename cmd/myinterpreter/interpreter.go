@@ -74,13 +74,29 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
         fmt.Fprintln(os.Stderr, "Operands must be a numbers.")
         os.Exit(70)
 	case GREATER:
-		return left.(float64) > right.(float64)
+        if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
+		    return left.(float64) > right.(float64)
+        }
+        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
+        os.Exit(70)
 	case GREATER_EQUAL:
-		return left.(float64) >= right.(float64)
+        if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
+		    return left.(float64) >= right.(float64)
+        }
+        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
+        os.Exit(70)
 	case LESS:
-		return left.(float64) < right.(float64)
+        if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
+		    return left.(float64) < right.(float64)
+        }
+        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
+        os.Exit(70)
 	case LESS_EQUAL:
-		return left.(float64) <= right.(float64)
+        if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
+		    return left.(float64) <= right.(float64)
+        }
+        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
+        os.Exit(70)
 	case EQUAL_EQUAL:
         left_type := reflect.TypeOf(left)
         right_type := reflect.TypeOf(right)
