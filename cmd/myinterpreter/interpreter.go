@@ -1,13 +1,16 @@
 package main
 
 import (
-    "reflect"
+	"fmt"
+	"os"
+	"reflect"
 )
 
 type Interpreter struct{}
 
 func NewInterpreter() *Interpreter {
-	return new(Interpreter)
+    i := new(Interpreter)
+    return i
 }
 
 func (i Interpreter) visitLiteralExpr(expr LiteralExpr) any {
@@ -25,7 +28,13 @@ func (i Interpreter) visitUnaryExpr(expr UnaryExpr) any {
 	case BANG:
 		return !booleanCast(right)
 	case MINUS:
-		return -(right.(float64))
+        switch right.(type){
+        case float64:
+		    return -(right.(float64))
+        default:
+            fmt.Fprintln(os.Stderr, "Operand must be a number")
+            os.Exit(70)
+        }
 	}
 
 	return nil
