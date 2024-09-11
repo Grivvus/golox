@@ -49,14 +49,12 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) * right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers.")
-        os.Exit(70)
+        loxRuntimePanicBinNumeric()
 	case SLASH:
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) / right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers.")
-        os.Exit(70) 
+        loxRuntimePanicBinNumeric()
 	case PLUS:
         left_type := reflect.TypeOf(left)
         right_type := reflect.TypeOf(right)
@@ -71,32 +69,27 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) - right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers.")
-        os.Exit(70)
+        loxRuntimePanicBinNumeric()
 	case GREATER:
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) > right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
-        os.Exit(70)
+        loxRuntimePanicBinNumeric()
 	case GREATER_EQUAL:
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) >= right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
-        os.Exit(70)
+        loxRuntimePanicBinNumeric()
 	case LESS:
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) < right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
-        os.Exit(70)
+        loxRuntimePanicBinNumeric()
 	case LESS_EQUAL:
         if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64{
 		    return left.(float64) <= right.(float64)
         }
-        fmt.Fprintln(os.Stderr, "Operands must be a numbers")
-        os.Exit(70)
+        loxRuntimePanicBinNumeric()
 	case EQUAL_EQUAL:
         left_type := reflect.TypeOf(left)
         right_type := reflect.TypeOf(right)
@@ -137,4 +130,9 @@ func booleanCast(expr any) bool {
 	default:
 		return true
 	}
+}
+
+func loxRuntimePanicBinNumeric(){
+    fmt.Fprintln(os.Stderr, "Operands must be a numbers")
+    os.Exit(70)
 }
