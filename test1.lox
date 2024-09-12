@@ -1,1 +1,4 @@
--"hello"
+print 42;
+print "Hello world!";
+print false;
+print nil;

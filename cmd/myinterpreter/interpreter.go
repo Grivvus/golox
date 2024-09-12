@@ -13,6 +13,12 @@ func NewInterpreter() *Interpreter {
     return i
 }
 
+func (i Interpreter) interpret(statements []Stmt) {
+    for _, stmt := range statements {
+        i.execute(stmt)
+    }
+}
+
 func (i Interpreter) visitLiteralExpr(expr LiteralExpr) any {
 	return expr.value
 }
@@ -116,8 +122,21 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
 	return nil
 }
 
+func (i Interpreter) visitExpressionStmt(stmt Expression) {
+    i.evaluate(stmt.expr)
+}
+
+func (i Interpreter) visitPrintStmt(stmt Print) {
+    value := i.evaluate(stmt.expr)
+    fmt.Println(value)
+}
+
 func (i Interpreter) evaluate(expr Expr) any {
 	return expr.accept(i)
+}
+
+func (i Interpreter) execute(stmt Stmt) {
+    stmt.accept(i)
 }
 
 func booleanCast(expr any) bool {

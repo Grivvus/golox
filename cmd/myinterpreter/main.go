@@ -16,7 +16,7 @@ func main() {
 
 	command := os.Args[1]
 
-	if command != "tokenize" && command != "parse" && command != "evaluate" {
+	if command != "tokenize" && command != "parse" && command != "evaluate" && command != "run" {
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
 	}
@@ -56,7 +56,7 @@ func main() {
 			os.Exit(scanner.ExitCode)
 		}
 		parser := NewParser(tokens)
-		parser.parse()
+		parser.parseExprs()
 		printer := NewPrinter()
 		for _, v := range parser.errs {
 			fmt.Fprintln(os.Stderr, v)
@@ -66,19 +66,26 @@ func main() {
 		}
 		os.Exit(parser.exitCode)
 	} else if command == "evaluate" {
-        parser := NewParser(tokens)    
-        exprs := parser.parse()
+		parser := NewParser(tokens)
+		exprs := parser.parseExprs()
+		interp := NewInterpreter()
+		var res []any
+		for _, expr := range exprs {
+			res = append(res, expr.accept(interp))
+		}
+		for _, v := range res {
+			if v == nil {
+				fmt.Println("nil")
+			} else {
+				fmt.Println(v)
+			}
+		}
+	} else if command == "run" {
+        parser := NewParser(tokens)
         interp := NewInterpreter()
-        var res []any
-        for _, expr := range exprs{
-            res = append(res, expr.accept(interp))
+        stmts := parser.parseStmts()
+        for _, stmt := range stmts {
+            interp.execute(stmt)
         }
-        for _, v := range res{
-            if v == nil {
-                fmt.Println("nil")
-            } else {
-                fmt.Println(v)
-            }
-        }
-    }
+	}
 }

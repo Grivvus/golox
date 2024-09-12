@@ -24,7 +24,7 @@ func NewParser(tokens []Token) *Parser {
 	return p
 }
 
-func (p *Parser) parse() []Expr {
+func (p *Parser) parseExprs() []Expr {
 	for !p.isAtEnd() {
 		expr := p.nextExpr()
 		if expr != nil {
@@ -32,6 +32,43 @@ func (p *Parser) parse() []Expr {
 		}
 	}
 	return p.exprs
+}
+
+func (p *Parser) parseStmts() []Stmt {
+    var stmts []Stmt
+    for !p.isAtEnd() {
+        stmts = append(stmts, p.statement())
+    }
+
+    return stmts
+}
+
+func (p *Parser)statement() Stmt {
+    if p.match(PRINT) {
+        return p.printStatement()
+    }
+
+    return p.expressionStatement()
+}
+
+func (p *Parser)printStatement() Print {
+    expr := p.nextExpr()
+    if !p.check(SEMICOLON) {
+        fmt.Fprintln(os.Stderr, "Expect ; after expression")
+        os.Exit(65)
+    }
+    p.incrIndex()
+    return *NewPrint(expr)
+}
+
+func (p *Parser)expressionStatement() Expression {
+    expr := p.nextExpr()
+    if !p.check(SEMICOLON) {
+        fmt.Fprintln(os.Stderr, "Expect ; after expression")
+        os.Exit(65)
+    }
+    p.incrIndex()
+    return *NewExpression(expr)
 }
 
 func (p *Parser) isAtEnd() bool {
