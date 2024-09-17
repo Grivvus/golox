@@ -9,13 +9,13 @@ import (
 var reservedWords map[string]TokenType
 
 type Scanner struct {
-	Source       []byte
+	Source       []rune
 	ExitCode     int
 	CurrentIndex int
 	CurrentLine  uint
 }
 
-func NewScanner(source []byte) *Scanner {
+func NewScanner(source []rune) *Scanner {
 	scanner := new(Scanner)
 	scanner.Source = source
 	scanner.CurrentIndex = 0
@@ -100,7 +100,7 @@ func (s *Scanner) NextToken() (*Token, error) {
 		}
 	case '"':
 		var res_str []rune
-		for s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] != '"' && s.Source[s.CurrentIndex] != '\n' {
+		for s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] != '"'{
 			res_str = append(res_str, rune(s.Source[s.CurrentIndex]))
 			s.CurrentIndex++
 		}
@@ -121,7 +121,7 @@ func (s *Scanner) NextToken() (*Token, error) {
 		return nil, nil
 	default:
 		if isDigit(char) {
-			var digits []byte
+			var digits []rune
 			var isFloat bool = false
 
 			digits = append(digits, char)
@@ -146,7 +146,7 @@ func (s *Scanner) NextToken() (*Token, error) {
 			}
 			return NewToken(numLiteral, NUMBER, parsed, s.CurrentLine), nil
 		} else if isAlpha(char) {
-			var identifier []byte
+			var identifier []rune
 			identifier = append(identifier, char)
 
 			for s.CurrentIndex < len(s.Source) && isAlphaOrDigit(s.Source[s.CurrentIndex]) {
@@ -166,20 +166,20 @@ func (s *Scanner) NextToken() (*Token, error) {
 	}
 }
 
-func isDigit(char byte) bool {
+func isDigit(char rune) bool {
 	if char >= '0' && char <= '9' {
 		return true
 	}
 	return false
 }
 
-func isAlpha(char byte) bool {
+func isAlpha(char rune) bool {
 	if char == '_' || (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') {
 		return true
 	}
 	return false
 }
 
-func isAlphaOrDigit(char byte) bool {
+func isAlphaOrDigit(char rune) bool {
 	return isDigit(char) || isAlpha(char)
 }

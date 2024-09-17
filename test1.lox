@@ -1,4 +1,1 @@
-print 42;
-print "Hello world!";
-print false;
-print nil;
+print "non-ascii: ॐ";

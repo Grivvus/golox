@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+    "bytes"
 )
 
 func main() {
@@ -30,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	scanner := NewScanner(fileContents)
+	scanner := NewScanner(bytes.Runes(fileContents))
 	var tokens []Token
 	token, err := scanner.NextToken()
 	for token == nil || token.Token != EOF {

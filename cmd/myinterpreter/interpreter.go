@@ -116,6 +116,8 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
             return left.(string) != right.(string)
         } else if left_type.Kind() == reflect.Float64 { 
             return left.(float64) != right.(float64)
+        } else if left_type.Kind() == reflect.Bool {
+            return left.(bool) != right.(bool)
         }
 	}
 
