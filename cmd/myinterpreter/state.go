@@ -22,8 +22,8 @@ func (s *State) define(name string, value any) {
 func (s *State) access(name string) any {
 	value, exist := s.values[name]
 	if !exist {
-		fmt.Fprintln(os.Stderr, "undefined name")
-		os.Exit(65)
+		fmt.Fprintln(os.Stderr, "undefined variable")
+		os.Exit(70)
 	}
 	return value
 }
