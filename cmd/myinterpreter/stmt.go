@@ -7,25 +7,12 @@ import (
 type stmtVisitor interface {
     visitPrintStmt(stmt Print)
     visitExpressionStmt(stmt Expression)
+    visitVarStmt(stmt Var)
 }
 
 type Stmt interface {
     accept(stmtVisitor)
 }
-
-// type Block[T any] struct {
-//     statements []Stmt[T]
-// }
-//
-// func NewBlock[T any](statements []Stmt[T]) *Block[T]{
-//     stmt := new(Block[T])
-//     stmt.statements = statements
-//     return stmt
-// }
-//
-// func (b *Block[T]) accept(vis stmtVisitor[T]) T {
-//     return vis.visitBlockStmt(*b)
-// }
 
 type Print struct {
     expr Expr
@@ -53,4 +40,20 @@ func NewExpression (expr Expr) *Expression {
 
 func (e Expression) accept(vis stmtVisitor){
     vis.visitExpressionStmt(e)
+}
+
+type Var struct {
+    varName Token
+    varValue Expr
+}
+
+func NewVar(varName Token, varValue Expr) *Var {
+    v := new(Var)
+    v.varName = varName
+    v.varValue = varValue
+    return v
+}
+
+func (v Var) accept(vis stmtVisitor){
+    vis.visitVarStmt(v)
 }

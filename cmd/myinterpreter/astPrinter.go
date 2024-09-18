@@ -53,3 +53,7 @@ func (printer astPrinter) visitLiteralExpr(expr LiteralExpr) string {
 	}
 	return fmt.Sprint(expr.value)
 }
+
+func (printer astPrinter) visitVarExpr(expr VarExpr) string {
+    return fmt.Sprintf("var %v\n", expr.name.Lexeme)
+}

@@ -6,10 +6,13 @@ import (
 	"reflect"
 )
 
-type Interpreter struct{}
+type Interpreter struct{
+    state *State
+}
 
 func NewInterpreter() *Interpreter {
     i := new(Interpreter)
+    i.state = NewState()
     return i
 }
 
@@ -17,6 +20,10 @@ func (i Interpreter) interpret(statements []Stmt) {
     for _, stmt := range statements {
         i.execute(stmt)
     }
+}
+
+func (i Interpreter) visitVarExpr(expr VarExpr) any {
+    return i.state.access(expr.name.Lexeme)
 }
 
 func (i Interpreter) visitLiteralExpr(expr LiteralExpr) any {
@@ -131,6 +138,18 @@ func (i Interpreter) visitExpressionStmt(stmt Expression) {
 func (i Interpreter) visitPrintStmt(stmt Print) {
     value := i.evaluate(stmt.expr)
     fmt.Println(value)
+}
+
+func (i Interpreter) visitVarStmt(stmt Var) {
+    var value any
+    if stmt.varValue != nil {
+        value = i.evaluate(stmt.varValue)
+    }
+    i.state.define(stmt.varName.Lexeme, value)
+}
+
+func (i Interpreter) visitDefinedVar(expr Var) any{
+    return i.state.access(expr.varName.Lexeme)
 }
 
 func (i Interpreter) evaluate(expr Expr) any {

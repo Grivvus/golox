@@ -35,40 +35,59 @@ func (p *Parser) parseExprs() []Expr {
 }
 
 func (p *Parser) parseStmts() []Stmt {
-    var stmts []Stmt
-    for !p.isAtEnd() {
-        stmts = append(stmts, p.statement())
-    }
+	var stmts []Stmt
+	for !p.isAtEnd() {
+		stmts = append(stmts, p.statement())
+	}
 
-    return stmts
+	return stmts
 }
 
-func (p *Parser)statement() Stmt {
-    if p.match(PRINT) {
-        return p.printStatement()
-    }
+func (p *Parser) statement() Stmt {
+	if p.match(VAR) {
+		return p.varStatement()
+	} else if p.match(PRINT) {
+		return p.printStatement()
+	}
 
-    return p.expressionStatement()
+	return p.expressionStatement()
 }
 
-func (p *Parser)printStatement() Print {
-    expr := p.nextExpr()
-    if !p.check(SEMICOLON) {
-        fmt.Fprintln(os.Stderr, "Expect ; after expression")
+func (p *Parser) varStatement() Var {
+    varName := p.incrIndex()
+    var varValue Expr = nil
+    if varName.Token != IDENTIFIER {
+        fmt.Fprintln(os.Stderr, "Expect variable name.")
         os.Exit(65)
     }
-    p.incrIndex()
-    return *NewPrint(expr)
-}
-
-func (p *Parser)expressionStatement() Expression {
-    expr := p.nextExpr()
-    if !p.check(SEMICOLON) {
-        fmt.Fprintln(os.Stderr, "Expect ; after expression")
-        os.Exit(65)
+    if (p.match(EQUAL)) {
+        varValue = p.nextExpr()
+    }
+    if p.getCurrent().Token != SEMICOLON {
+        fmt.Fprintln(os.Stderr, "Expect ; after variable declaration")
     }
     p.incrIndex()
-    return *NewExpression(expr)
+    return *NewVar(varName, varValue)
+}
+
+func (p *Parser) printStatement() Print {
+	expr := p.nextExpr()
+	if !p.check(SEMICOLON) {
+		fmt.Fprintln(os.Stderr, "Expect ; after expression")
+		os.Exit(65)
+	}
+	p.incrIndex()
+	return *NewPrint(expr)
+}
+
+func (p *Parser) expressionStatement() Expression {
+	expr := p.nextExpr()
+	if !p.check(SEMICOLON) {
+		fmt.Fprintln(os.Stderr, "Expect ; after expression")
+		os.Exit(65)
+	}
+	p.incrIndex()
+	return *NewExpression(expr)
 }
 
 func (p *Parser) isAtEnd() bool {
@@ -113,7 +132,9 @@ func (p *Parser) literalExpr() Expr {
 		return NewLiteralExpr(nil)
 	} else if p.match(STRING, NUMBER) {
 		return NewLiteralExpr(p.getPrev().Literal)
-	}
+	} else if p.match(IDENTIFIER){
+        return NewVarExpr(p.getPrev())
+    }
 	p.currentIndex++
 	p.exitCode = 65
 	fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v': Expect expression.", p.getCurrent().line, p.getCurrent().Lexeme))
@@ -129,6 +150,7 @@ func (p *Parser) group() Expr {
 		if !p.check(RIGHT_PAREN) {
 			p.exitCode = 65
 			fmt.Fprintln(os.Stderr, errors.New("Expect ) after expression"))
+            os.Exit(65)
 		} else {
 			p.currentIndex++
 		}
