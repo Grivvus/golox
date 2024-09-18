@@ -137,7 +137,11 @@ func (i Interpreter) visitExpressionStmt(stmt Expression) {
 
 func (i Interpreter) visitPrintStmt(stmt Print) {
     value := i.evaluate(stmt.expr)
-    fmt.Println(value)
+    if value != nil {
+        fmt.Println(value)
+    } else {
+        fmt.Println("nil")
+    }
 }
 
 func (i Interpreter) visitVarStmt(stmt Var) {
