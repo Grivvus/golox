@@ -6,6 +6,7 @@ type visitor[T string | any] interface {
 	visitGroupingExpr(GroupingExpr) T
 	visitLiteralExpr(LiteralExpr) T
 	visitVarExpr(VarExpr) T
+    visitAssignExpr(AssignExpr) T
 }
 
 type Expr interface {
@@ -107,4 +108,24 @@ func (var_ *VarExpr) print(v visitor[string]) string {
 
 func (var_ *VarExpr) accept(v visitor[any]) any {
 	return v.visitVarExpr(*var_)
+}
+
+type AssignExpr struct {
+    name Token
+    value Expr
+}
+
+func NewAssignExpr(name Token, value Expr) *AssignExpr{
+    a := new(AssignExpr)
+    a.name = name
+    a.value = value
+    return a
+}
+
+func (assign *AssignExpr) print(v visitor[string]) string {
+    return v.visitAssignExpr(*assign)
+}
+
+func (assign *AssignExpr) accept(v visitor[any]) any {
+    return v.visitAssignExpr(*assign)
 }

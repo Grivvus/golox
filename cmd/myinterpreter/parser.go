@@ -235,6 +235,23 @@ func (p *Parser) equality() Expr {
 	return expr
 }
 
+func (p *Parser) assignment() Expr {
+    expr := p.equality()
+
+    if p.match(EQUAL){
+        value := p.assignment()
+        switch expr.(type){
+        case *VarExpr:
+            name := expr.(*VarExpr).name
+            return NewAssignExpr(name, value)
+        default:
+            fmt.Fprintln(os.Stderr, "Invalid assignment target")
+            os.Exit(70)
+        }
+    }
+    return expr
+}
+
 func (p *Parser) nextExpr() Expr {
-	return p.equality()
+	return p.assignment()
 }
