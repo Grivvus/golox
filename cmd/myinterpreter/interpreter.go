@@ -12,7 +12,7 @@ type Interpreter struct {
 
 func NewInterpreter() *Interpreter {
 	i := new(Interpreter)
-	i.state = NewState()
+	i.state = NewState(nil)
 	return i
 }
 
@@ -137,7 +137,7 @@ func (i Interpreter) visitDefinedVar(expr VarExpr) any {
 
 func (i Interpreter) visitAssignExpr(expr AssignExpr) any {
     value := i.evaluate(expr.value)
-    i.state.define(expr.name.Lexeme, value)
+    i.state.assign(expr.name.Lexeme, value)
     return value
 }
 
@@ -160,6 +160,19 @@ func (i Interpreter) visitVarStmt(stmt Var) {
 		value = i.evaluate(stmt.varValue)
 	}
 	i.state.define(stmt.varName.Lexeme, value)
+}
+
+func (i Interpreter) visitBlockStmt(stmt Block) {
+    i.executeBlock(stmt, *NewState(i.state))
+}
+
+func (i Interpreter) executeBlock(block Block, state State){
+    prevState := i.state
+    i.state = &state
+    for _, stmt := range block.stmts{
+        i.execute(stmt)
+    }
+    i.state = prevState
 }
 
 func (i Interpreter) evaluate(expr Expr) any {

@@ -1,4 +1,5 @@
-var a;
-var b = 2;
-var a = b = 1;
-print a;
+var global = "outside";
+{
+  var local = "inside";
+  print global + local;
+}

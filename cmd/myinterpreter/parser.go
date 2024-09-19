@@ -48,26 +48,41 @@ func (p *Parser) statement() Stmt {
 		return p.varStatement()
 	} else if p.match(PRINT) {
 		return p.printStatement()
+	} else if p.match(LEFT_BRACE) {
+		return p.blockStatement()
 	}
 
 	return p.expressionStatement()
 }
 
-func (p *Parser) varStatement() Var {
-    varName := p.incrIndex()
-    var varValue Expr = nil
-    if varName.Token != IDENTIFIER {
-        fmt.Fprintln(os.Stderr, "Expect variable name.")
+func (p *Parser) blockStatement() Block {
+    var stmts []Stmt
+    for !p.check(RIGHT_BRACE) && !p.isAtEnd(){
+        stmts = append(stmts, p.statement())
+    }
+    if p.getCurrent().Token != RIGHT_BRACE {
+        fmt.Fprintln(os.Stderr, "Expect } after block statement")
         os.Exit(65)
     }
-    if (p.match(EQUAL)) {
-        varValue = p.nextExpr()
-    }
-    if p.getCurrent().Token != SEMICOLON {
-        fmt.Fprintln(os.Stderr, "Expect ; after variable declaration")
-    }
     p.incrIndex()
-    return *NewVar(varName, varValue)
+    return *NewBlock(stmts)
+}
+
+func (p *Parser) varStatement() Var {
+	varName := p.incrIndex()
+	var varValue Expr = nil
+	if varName.Token != IDENTIFIER {
+		fmt.Fprintln(os.Stderr, "Expect variable name.")
+		os.Exit(65)
+	}
+	if p.match(EQUAL) {
+		varValue = p.nextExpr()
+	}
+	if p.getCurrent().Token != SEMICOLON {
+		fmt.Fprintln(os.Stderr, "Expect ; after variable declaration")
+	}
+	p.incrIndex()
+	return *NewVar(varName, varValue)
 }
 
 func (p *Parser) printStatement() Print {
@@ -132,9 +147,9 @@ func (p *Parser) literalExpr() Expr {
 		return NewLiteralExpr(nil)
 	} else if p.match(STRING, NUMBER) {
 		return NewLiteralExpr(p.getPrev().Literal)
-	} else if p.match(IDENTIFIER){
-        return NewVarExpr(p.getPrev())
-    }
+	} else if p.match(IDENTIFIER) {
+		return NewVarExpr(p.getPrev())
+	}
 	p.currentIndex++
 	p.exitCode = 65
 	fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v': Expect expression.", p.getCurrent().line, p.getCurrent().Lexeme))
@@ -150,7 +165,7 @@ func (p *Parser) group() Expr {
 		if !p.check(RIGHT_PAREN) {
 			p.exitCode = 65
 			fmt.Fprintln(os.Stderr, errors.New("Expect ) after expression"))
-            os.Exit(65)
+			os.Exit(65)
 		} else {
 			p.currentIndex++
 		}
@@ -236,20 +251,20 @@ func (p *Parser) equality() Expr {
 }
 
 func (p *Parser) assignment() Expr {
-    expr := p.equality()
+	expr := p.equality()
 
-    if p.match(EQUAL){
-        value := p.assignment()
-        switch expr.(type){
-        case *VarExpr:
-            name := expr.(*VarExpr).name
-            return NewAssignExpr(name, value)
-        default:
-            fmt.Fprintln(os.Stderr, "Invalid assignment target")
-            os.Exit(70)
-        }
-    }
-    return expr
+	if p.match(EQUAL) {
+		value := p.assignment()
+		switch expr.(type) {
+		case *VarExpr:
+			name := expr.(*VarExpr).name
+			return NewAssignExpr(name, value)
+		default:
+			fmt.Fprintln(os.Stderr, "Invalid assignment target")
+			os.Exit(70)
+		}
+	}
+	return expr
 }
 
 func (p *Parser) nextExpr() Expr {
