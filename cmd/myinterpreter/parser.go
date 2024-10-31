@@ -50,7 +50,9 @@ func (p *Parser) statement() Stmt {
 		return p.printStatement()
 	} else if p.match(LEFT_BRACE) {
 		return p.blockStatement()
-	}
+	} else if p.match(IF) {
+        return p.ifStatement()
+    }
 
 	return p.expressionStatement()
 }
@@ -103,6 +105,26 @@ func (p *Parser) expressionStatement() Expression {
 	}
 	p.incrIndex()
 	return *NewExpression(expr)
+}
+
+func (p *Parser) ifStatement() If {
+    if !p.match(LEFT_PAREN) {
+        fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
+        os.Exit(65)
+    }
+    condition := p.nextExpr()
+    if !p.match(RIGHT_PAREN) {
+        fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
+        os.Exit(65)
+    }
+    thenBranch := p.statement()
+    var elseBranch Stmt
+    if p.match(ELSE) {
+        elseBranch = p.statement()
+    } else {
+        elseBranch = nil
+    }
+    return *NewIf(condition, thenBranch, elseBranch)
 }
 
 func (p *Parser) isAtEnd() bool {

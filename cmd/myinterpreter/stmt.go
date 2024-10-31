@@ -7,6 +7,7 @@ type stmtVisitor interface {
 	visitExpressionStmt(stmt Expression)
 	visitVarStmt(stmt Var)
 	visitBlockStmt(stmt Block)
+    visitIfStmt(stmt If)
 }
 
 type Stmt interface {
@@ -69,4 +70,22 @@ func NewBlock(stmts []Stmt) *Block {
 
 func (b Block) accept(vis stmtVisitor) {
 	vis.visitBlockStmt(b)
+}
+
+type If struct {
+    condition Expr
+    thenBranch Stmt
+    elseBranch Stmt
+}
+
+func NewIf(condition Expr, thenBranch, elseBranch Stmt) *If {
+    i := new(If)
+    i.condition = condition
+    i.thenBranch = thenBranch
+    i.elseBranch = elseBranch
+    return i
+}
+
+func (i If) accept(vis stmtVisitor){
+    vis.visitIfStmt(i)
 }

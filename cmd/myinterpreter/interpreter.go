@@ -112,7 +112,9 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
 			return left.(string) == right.(string)
 		} else if left_type.Kind() == reflect.Float64 {
 			return left.(float64) == right.(float64)
-		}
+		} else if left_type.Kind() == reflect.Bool {
+            return left.(bool) == right.(bool)
+        }
 
 	case BANG_EQUAL:
 		left_type := reflect.TypeOf(left)
@@ -164,6 +166,14 @@ func (i Interpreter) visitVarStmt(stmt Var) {
 
 func (i Interpreter) visitBlockStmt(stmt Block) {
     i.executeBlock(stmt, *NewState(i.state))
+}
+
+func (i Interpreter) visitIfStmt(stmt If) {
+    if booleanCast(i.evaluate(stmt.condition)){
+        i.execute(stmt.thenBranch)
+    } else if stmt.elseBranch != nil {
+        i.execute(stmt.elseBranch)
+    }
 }
 
 func (i Interpreter) executeBlock(block Block, state State){
