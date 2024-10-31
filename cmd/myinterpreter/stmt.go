@@ -8,6 +8,7 @@ type stmtVisitor interface {
 	visitVarStmt(stmt Var)
 	visitBlockStmt(stmt Block)
     visitIfStmt(stmt If)
+    visitWhileStmt(stmt While)
 }
 
 type Stmt interface {
@@ -88,4 +89,20 @@ func NewIf(condition Expr, thenBranch, elseBranch Stmt) *If {
 
 func (i If) accept(vis stmtVisitor){
     vis.visitIfStmt(i)
+}
+
+type While struct {
+    condition Expr
+    body Stmt
+}
+
+func NewWhile(condition Expr, body Stmt) *While {
+    w := new(While)
+    w.body = body
+    w.condition = condition
+    return w
+}
+
+func (w While) accept(vis stmtVisitor) {
+    vis.visitWhileStmt(w)
 }

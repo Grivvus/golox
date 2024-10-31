@@ -138,18 +138,18 @@ func (i Interpreter) visitDefinedVar(expr VarExpr) any {
 }
 
 func (i Interpreter) visitLogicalExpr(expr LogicalExpr) any {
-    left := i.evaluate(expr.left)
-    if expr.operator.Token == OR{
-        if booleanCast(left) == true {
-            return left
-        }
-    } else {
-        if booleanCast(left) == false {
-            return left
-        }
-    }
-    right := i.evaluate(expr.right)
-    return right
+	left := i.evaluate(expr.left)
+	if expr.operator.Token == OR {
+		if booleanCast(left) == true {
+			return left
+		}
+	} else {
+		if booleanCast(left) == false {
+			return left
+		}
+	}
+	right := i.evaluate(expr.right)
+	return right
 }
 
 func (i Interpreter) visitAssignExpr(expr AssignExpr) any {
@@ -188,6 +188,12 @@ func (i Interpreter) visitIfStmt(stmt If) {
 		i.execute(stmt.thenBranch)
 	} else if stmt.elseBranch != nil {
 		i.execute(stmt.elseBranch)
+	}
+}
+
+func (i Interpreter) visitWhileStmt(stmt While) {
+	for booleanCast(i.evaluate(stmt.condition)) == true {
+		i.execute(stmt.body)
 	}
 }
 

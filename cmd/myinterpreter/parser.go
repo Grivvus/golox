@@ -44,15 +44,17 @@ func (p *Parser) parseStmts() []Stmt {
 }
 
 func (p *Parser) statement() Stmt {
-	if p.match(VAR) {
+    if p.match(IF){
+		return p.ifStatement()
+    }else if p.match(VAR) {
 		return p.varStatement()
 	} else if p.match(PRINT) {
 		return p.printStatement()
+    } else if p.match(WHILE) {
+        return p.whileStatement()
 	} else if p.match(LEFT_BRACE) {
 		return p.blockStatement()
-	} else if p.match(IF) {
-		return p.ifStatement()
-	}
+    }
 
 	return p.expressionStatement()
 }
@@ -125,6 +127,21 @@ func (p *Parser) ifStatement() If {
 		elseBranch = nil
 	}
 	return *NewIf(condition, thenBranch, elseBranch)
+}
+
+func (p *Parser) whileStatement() While {
+	if !p.match(LEFT_PAREN) {
+		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
+		os.Exit(65)
+	}
+	condition := p.nextExpr()
+	if !p.match(RIGHT_PAREN) {
+		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
+		os.Exit(65)
+	}
+    body := p.statement()
+
+    return *NewWhile(condition, body)
 }
 
 func (p *Parser) isAtEnd() bool {
