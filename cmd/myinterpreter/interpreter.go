@@ -113,8 +113,8 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
 		} else if left_type.Kind() == reflect.Float64 {
 			return left.(float64) == right.(float64)
 		} else if left_type.Kind() == reflect.Bool {
-            return left.(bool) == right.(bool)
-        }
+			return left.(bool) == right.(bool)
+		}
 
 	case BANG_EQUAL:
 		left_type := reflect.TypeOf(left)
@@ -137,10 +137,25 @@ func (i Interpreter) visitDefinedVar(expr VarExpr) any {
 	return i.state.access(expr.name.Lexeme)
 }
 
+func (i Interpreter) visitLogicalExpr(expr LogicalExpr) any {
+    left := i.evaluate(expr.left)
+    if expr.operator.Token == OR{
+        if booleanCast(left) == true {
+            return left
+        }
+    } else {
+        if booleanCast(left) == false {
+            return left
+        }
+    }
+    right := i.evaluate(expr.right)
+    return right
+}
+
 func (i Interpreter) visitAssignExpr(expr AssignExpr) any {
-    value := i.evaluate(expr.value)
-    i.state.assign(expr.name.Lexeme, value)
-    return value
+	value := i.evaluate(expr.value)
+	i.state.assign(expr.name.Lexeme, value)
+	return value
 }
 
 func (i Interpreter) visitExpressionStmt(stmt Expression) {
@@ -165,24 +180,24 @@ func (i Interpreter) visitVarStmt(stmt Var) {
 }
 
 func (i Interpreter) visitBlockStmt(stmt Block) {
-    i.executeBlock(stmt, *NewState(i.state))
+	i.executeBlock(stmt, *NewState(i.state))
 }
 
 func (i Interpreter) visitIfStmt(stmt If) {
-    if booleanCast(i.evaluate(stmt.condition)){
-        i.execute(stmt.thenBranch)
-    } else if stmt.elseBranch != nil {
-        i.execute(stmt.elseBranch)
-    }
+	if booleanCast(i.evaluate(stmt.condition)) {
+		i.execute(stmt.thenBranch)
+	} else if stmt.elseBranch != nil {
+		i.execute(stmt.elseBranch)
+	}
 }
 
-func (i Interpreter) executeBlock(block Block, state State){
-    prevState := i.state
-    i.state = &state
-    for _, stmt := range block.stmts{
-        i.execute(stmt)
-    }
-    i.state = prevState
+func (i Interpreter) executeBlock(block Block, state State) {
+	prevState := i.state
+	i.state = &state
+	for _, stmt := range block.stmts {
+		i.execute(stmt)
+	}
+	i.state = prevState
 }
 
 func (i Interpreter) evaluate(expr Expr) any {

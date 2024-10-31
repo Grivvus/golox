@@ -61,3 +61,7 @@ func (printer astPrinter) visitVarExpr(expr VarExpr) string {
 func (printer astPrinter) visitAssignExpr(expr AssignExpr) string {
     return fmt.Sprintf("var %v=%v\n", expr.name, expr.value)
 }
+
+func (printer astPrinter) visitLogicalExpr(expr LogicalExpr) string {
+	return printer.parenthesize(expr.operator.Lexeme, expr.left, expr.right)
+}

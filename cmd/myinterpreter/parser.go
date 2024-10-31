@@ -51,23 +51,23 @@ func (p *Parser) statement() Stmt {
 	} else if p.match(LEFT_BRACE) {
 		return p.blockStatement()
 	} else if p.match(IF) {
-        return p.ifStatement()
-    }
+		return p.ifStatement()
+	}
 
 	return p.expressionStatement()
 }
 
 func (p *Parser) blockStatement() Block {
-    var stmts []Stmt
-    for !p.check(RIGHT_BRACE) && !p.isAtEnd(){
-        stmts = append(stmts, p.statement())
-    }
-    if p.getCurrent().Token != RIGHT_BRACE {
-        fmt.Fprintln(os.Stderr, "Expect } after block statement")
-        os.Exit(65)
-    }
-    p.incrIndex()
-    return *NewBlock(stmts)
+	var stmts []Stmt
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		stmts = append(stmts, p.statement())
+	}
+	if p.getCurrent().Token != RIGHT_BRACE {
+		fmt.Fprintln(os.Stderr, "Expect } after block statement")
+		os.Exit(65)
+	}
+	p.incrIndex()
+	return *NewBlock(stmts)
 }
 
 func (p *Parser) varStatement() Var {
@@ -108,23 +108,23 @@ func (p *Parser) expressionStatement() Expression {
 }
 
 func (p *Parser) ifStatement() If {
-    if !p.match(LEFT_PAREN) {
-        fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
-        os.Exit(65)
-    }
-    condition := p.nextExpr()
-    if !p.match(RIGHT_PAREN) {
-        fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
-        os.Exit(65)
-    }
-    thenBranch := p.statement()
-    var elseBranch Stmt
-    if p.match(ELSE) {
-        elseBranch = p.statement()
-    } else {
-        elseBranch = nil
-    }
-    return *NewIf(condition, thenBranch, elseBranch)
+	if !p.match(LEFT_PAREN) {
+		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
+		os.Exit(65)
+	}
+	condition := p.nextExpr()
+	if !p.match(RIGHT_PAREN) {
+		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
+		os.Exit(65)
+	}
+	thenBranch := p.statement()
+	var elseBranch Stmt
+	if p.match(ELSE) {
+		elseBranch = p.statement()
+	} else {
+		elseBranch = nil
+	}
+	return *NewIf(condition, thenBranch, elseBranch)
 }
 
 func (p *Parser) isAtEnd() bool {
@@ -272,8 +272,28 @@ func (p *Parser) equality() Expr {
 	return expr
 }
 
+func (p *Parser) and() Expr {
+    expr := p.equality()
+    for p.match(OR) {
+        operator := p.getPrev()
+        right := p.equality()
+        expr = NewLogicalExpr(expr, operator, right)
+    }
+    return expr
+}
+
+func (p *Parser) or() Expr {
+    expr := p.and()
+    for p.match(AND) {
+        operator := p.getPrev()
+        right := p.and()
+        expr = NewLogicalExpr(expr, operator, right)
+    }
+    return expr
+}
+
 func (p *Parser) assignment() Expr {
-	expr := p.equality()
+	expr := p.and()
 
 	if p.match(EQUAL) {
 		value := p.assignment()

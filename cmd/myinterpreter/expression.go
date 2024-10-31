@@ -7,6 +7,7 @@ type visitor[T string | any] interface {
 	visitLiteralExpr(LiteralExpr) T
 	visitVarExpr(VarExpr) T
     visitAssignExpr(AssignExpr) T
+    visitLogicalExpr(LogicalExpr) T
 }
 
 type Expr interface {
@@ -128,4 +129,26 @@ func (assign *AssignExpr) print(v visitor[string]) string {
 
 func (assign *AssignExpr) accept(v visitor[any]) any {
     return v.visitAssignExpr(*assign)
+}
+
+type LogicalExpr struct {
+    left Expr
+    operator Token
+    right Expr
+}
+
+func NewLogicalExpr(left Expr, operator Token, right Expr) *LogicalExpr {
+    l := new(LogicalExpr)
+    l.left = left
+    l.right = right
+    l.operator = operator
+    return l
+}
+
+func (logical *LogicalExpr) accept(v visitor[any]) any {
+    return v.visitLogicalExpr(*logical)
+}
+
+func (logical *LogicalExpr) print(v visitor[string]) string {
+    return v.visitLogicalExpr(*logical)
 }
