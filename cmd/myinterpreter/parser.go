@@ -293,7 +293,7 @@ func (p *Parser) or() Expr {
 }
 
 func (p *Parser) assignment() Expr {
-	expr := p.and()
+	expr := p.or()
 
 	if p.match(EQUAL) {
 		value := p.assignment()
