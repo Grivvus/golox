@@ -1,13 +1,21 @@
-for (var baz = 0; baz < 3;) print baz = baz + 1;
+var baz = "after";
+{
+    var baz = "before";
 
-for (var world = 0; world < 3; world = world + 1) {
-  print world;
+    for (var baz = 0; baz > 0; baz = baz + 1) {
+        print baz;
+        var baz = -1;
+        print baz;
+    }
 }
 
-var world = 0;
-for (; world < 2; world = world + 1) print world;
+{
+    for (var baz = 0; baz > 0; baz = baz + 1){}
 
-for (var foo = 0; foo < 2;) {
-  print foo;
-  foo = foo + 1;
+    var baz = "after";
+    print baz;
+
+    for (baz = 0; baz < 1; baz = baz + 1){
+        print baz;
+    }
 }

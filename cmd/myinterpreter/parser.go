@@ -37,10 +37,17 @@ func (p *Parser) parseExprs() []Expr {
 func (p *Parser) parseStmts() []Stmt {
 	var stmts []Stmt
 	for !p.isAtEnd() {
-		stmts = append(stmts, p.statement())
+		stmts = append(stmts, p.declaration())
 	}
 
 	return stmts
+}
+
+func (p *Parser) declaration() Stmt {
+    if p.match(VAR){
+        return p.varStatement()
+    }
+    return p.statement()
 }
 
 func (p *Parser) statement() Stmt {
@@ -48,8 +55,6 @@ func (p *Parser) statement() Stmt {
         return p.forStatement()
     } else if p.match(IF){
 		return p.ifStatement()
-    }else if p.match(VAR) {
-		return p.varStatement()
 	} else if p.match(PRINT) {
 		return p.printStatement()
     } else if p.match(WHILE) {
@@ -64,7 +69,7 @@ func (p *Parser) statement() Stmt {
 func (p *Parser) blockStatement() Stmt {
 	var stmts []Stmt
 	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
-		stmts = append(stmts, p.statement())
+		stmts = append(stmts, p.declaration())
 	}
 	if p.getCurrent().Token != RIGHT_BRACE {
 		fmt.Fprintln(os.Stderr, "Expect } after block statement")
@@ -94,11 +99,10 @@ func (p *Parser) varStatement() Stmt {
 
 func (p *Parser) printStatement() Stmt {
 	expr := p.nextExpr()
-	if !p.check(SEMICOLON) {
+	if !p.match(SEMICOLON) {
 		fmt.Fprintln(os.Stderr, "Expect ; after expression")
 		os.Exit(65)
 	}
-	p.incrIndex()
 	return *NewPrint(expr)
 }
 
@@ -165,7 +169,7 @@ func (p *Parser) forStatement() Stmt {
         condition = p.nextExpr()
     } 
     if !p.match(SEMICOLON) {
-        fmt.Fprintln(os.Stderr, "Expect ; after loop condition")
+        fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v' Expect ';' after expression", p.getCurrent().line, p.getCurrent().Lexeme))
         os.Exit(65)
     }
 
