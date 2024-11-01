@@ -1,7 +1,5 @@
 package main
 
-import ()
-
 type stmtVisitor interface {
 	visitPrintStmt(stmt Print)
 	visitExpressionStmt(stmt Expression)

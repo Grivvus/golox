@@ -44,7 +44,9 @@ func (p *Parser) parseStmts() []Stmt {
 }
 
 func (p *Parser) statement() Stmt {
-    if p.match(IF){
+    if p.match(FOR){
+        return p.forStatement()
+    } else if p.match(IF){
 		return p.ifStatement()
     }else if p.match(VAR) {
 		return p.varStatement()
@@ -59,7 +61,7 @@ func (p *Parser) statement() Stmt {
 	return p.expressionStatement()
 }
 
-func (p *Parser) blockStatement() Block {
+func (p *Parser) blockStatement() Stmt {
 	var stmts []Stmt
 	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
 		stmts = append(stmts, p.statement())
@@ -72,7 +74,7 @@ func (p *Parser) blockStatement() Block {
 	return *NewBlock(stmts)
 }
 
-func (p *Parser) varStatement() Var {
+func (p *Parser) varStatement() Stmt {
 	varName := p.incrIndex()
 	var varValue Expr = nil
 	if varName.Token != IDENTIFIER {
@@ -84,12 +86,13 @@ func (p *Parser) varStatement() Var {
 	}
 	if p.getCurrent().Token != SEMICOLON {
 		fmt.Fprintln(os.Stderr, "Expect ; after variable declaration")
+        os.Exit(65)
 	}
 	p.incrIndex()
 	return *NewVar(varName, varValue)
 }
 
-func (p *Parser) printStatement() Print {
+func (p *Parser) printStatement() Stmt {
 	expr := p.nextExpr()
 	if !p.check(SEMICOLON) {
 		fmt.Fprintln(os.Stderr, "Expect ; after expression")
@@ -99,17 +102,16 @@ func (p *Parser) printStatement() Print {
 	return *NewPrint(expr)
 }
 
-func (p *Parser) expressionStatement() Expression {
+func (p *Parser) expressionStatement() Stmt {
 	expr := p.nextExpr()
-	if !p.check(SEMICOLON) {
+	if !p.match(SEMICOLON) {
 		fmt.Fprintln(os.Stderr, "Expect ; after expression")
 		os.Exit(65)
 	}
-	p.incrIndex()
 	return *NewExpression(expr)
 }
 
-func (p *Parser) ifStatement() If {
+func (p *Parser) ifStatement() Stmt {
 	if !p.match(LEFT_PAREN) {
 		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
 		os.Exit(65)
@@ -129,7 +131,7 @@ func (p *Parser) ifStatement() If {
 	return *NewIf(condition, thenBranch, elseBranch)
 }
 
-func (p *Parser) whileStatement() While {
+func (p *Parser) whileStatement() Stmt {
 	if !p.match(LEFT_PAREN) {
 		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
 		os.Exit(65)
@@ -142,6 +144,59 @@ func (p *Parser) whileStatement() While {
     body := p.statement()
 
     return *NewWhile(condition, body)
+}
+
+func (p *Parser) forStatement() Stmt {
+	if !p.match(LEFT_PAREN) {
+		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
+		os.Exit(65)
+	}
+    var initializer Stmt
+    if p.match(SEMICOLON) {
+        initializer = nil
+    } else if p.match(VAR) {
+        initializer = p.varStatement()
+    } else {
+        initializer = p.expressionStatement()
+    }
+    
+    var condition Expr = nil
+    if !p.check(SEMICOLON){
+        condition = p.nextExpr()
+    } 
+    if !p.match(SEMICOLON) {
+        fmt.Fprintln(os.Stderr, "Expect ; after loop condition")
+        os.Exit(65)
+    }
+
+    var increment Expr = nil
+    if !p.check(RIGHT_PAREN) {
+        increment = p.nextExpr()
+    }
+    if !p.match(RIGHT_PAREN) {
+		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
+		os.Exit(65)
+	}
+
+    body := p.statement()
+
+    if increment != nil {
+        stmts := make([]Stmt, 2)
+        stmts[0] = body
+        stmts[1] = *NewExpression(increment)
+        body = *NewBlock(stmts)
+    }
+    if condition ==  nil {
+        condition = NewLiteralExpr(true)
+    }
+    body = *NewWhile(condition, body)
+    if initializer != nil {
+        stmts := make([]Stmt, 2)
+        stmts[0] = initializer
+        stmts[1] = body
+        body = *NewBlock(stmts)
+    }
+    return body
 }
 
 func (p *Parser) isAtEnd() bool {

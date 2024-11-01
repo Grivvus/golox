@@ -180,7 +180,7 @@ func (i Interpreter) visitVarStmt(stmt Var) {
 }
 
 func (i Interpreter) visitBlockStmt(stmt Block) {
-	i.executeBlock(stmt, *NewState(i.state))
+	i.executeBlock(stmt, NewState(i.state))
 }
 
 func (i Interpreter) visitIfStmt(stmt If) {
@@ -197,9 +197,9 @@ func (i Interpreter) visitWhileStmt(stmt While) {
 	}
 }
 
-func (i Interpreter) executeBlock(block Block, state State) {
+func (i Interpreter) executeBlock(block Block, state *State) {
 	prevState := i.state
-	i.state = &state
+	i.state = state
 	for _, stmt := range block.stmts {
 		i.execute(stmt)
 	}
