@@ -7,6 +7,7 @@ type stmtVisitor interface {
 	visitBlockStmt(stmt Block)
     visitIfStmt(stmt If)
     visitWhileStmt(stmt While)
+    visitFunctionStmt(stmt Function)
 }
 
 type Stmt interface {
@@ -103,4 +104,22 @@ func NewWhile(condition Expr, body Stmt) *While {
 
 func (w While) accept(vis stmtVisitor) {
     vis.visitWhileStmt(w)
+}
+
+type Function struct {
+    name Token
+    arguments []Token
+    body Block
+}
+
+func NewFunction(name Token, arguments []Token, body Block) *Function{
+    fn := new(Function)
+    fn.name = name
+    fn.arguments = arguments
+    fn.body = body
+    return fn
+}
+
+func (fn Function) accept(vis stmtVisitor){
+    vis.visitFunctionStmt(fn)
 }

@@ -13,6 +13,7 @@ type Interpreter struct {
 func NewInterpreter() *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
+	i.state.define("clock", newLoxTime())
 	return i
 }
 
@@ -152,6 +153,21 @@ func (i Interpreter) visitLogicalExpr(expr LogicalExpr) any {
 	return right
 }
 
+func (i Interpreter) visitCallExpr(expr CallExpr) any {
+	callee := i.evaluate(expr.callee)
+	arguments := make([]any, 0)
+	for _, arg := range expr.args {
+		arguments = append(arguments, i.evaluate(arg))
+	}
+	var function LoxCallable
+	function = callee.(LoxCallable)
+	if function.arity() != len(arguments) {
+		fmt.Fprintf(os.Stderr, "expected %v arguments but got %v\n", function.arity(), len(arguments))
+		os.Exit(70)
+	}
+	return function.call(i, arguments)
+}
+
 func (i Interpreter) visitAssignExpr(expr AssignExpr) any {
 	value := i.evaluate(expr.value)
 	i.state.assign(expr.name.Lexeme, value)
@@ -165,7 +181,16 @@ func (i Interpreter) visitExpressionStmt(stmt Expression) {
 func (i Interpreter) visitPrintStmt(stmt Print) {
 	value := i.evaluate(stmt.expr)
 	if value != nil {
-		fmt.Println(value)
+		switch v := value.(type) {
+		case float64:
+			if v == float64(int64(v)) {
+				fmt.Println(int64(v))
+			} else {
+                fmt.Println(v)
+			}
+		default:
+			fmt.Println(value)
+		}
 	} else {
 		fmt.Println("nil")
 	}
@@ -195,6 +220,11 @@ func (i Interpreter) visitWhileStmt(stmt While) {
 	for booleanCast(i.evaluate(stmt.condition)) == true {
 		i.execute(stmt.body)
 	}
+}
+
+func (i Interpreter) visitFunctionStmt(stmt Function) {
+	fn := NewLoxFunction(stmt, *i.state, false)
+	i.state.define(stmt.name.Lexeme, fn)
 }
 
 func (i Interpreter) executeBlock(block Block, state *State) {

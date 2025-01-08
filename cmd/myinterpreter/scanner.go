@@ -32,12 +32,14 @@ func (s *Scanner) NextToken() (*Token, error) {
 		s.CurrentLine++
 	}
 
+    COMMENTS_AGAGIN:
 	if s.CurrentIndex < (len(s.Source)-1) && s.Source[s.CurrentIndex] == '/' && s.Source[s.CurrentIndex+1] == '/' {
 		for s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] != '\n' {
 			s.CurrentIndex++
 		}
 		s.CurrentLine++
 		s.CurrentIndex++
+        goto COMMENTS_AGAGIN
 	}
 
 	if s.CurrentIndex >= len(s.Source) {

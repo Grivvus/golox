@@ -65,3 +65,7 @@ func (printer astPrinter) visitAssignExpr(expr AssignExpr) string {
 func (printer astPrinter) visitLogicalExpr(expr LogicalExpr) string {
 	return printer.parenthesize(expr.operator.Lexeme, expr.left, expr.right)
 }
+
+func (printer astPrinter) visitCallExpr(expr CallExpr) string {
+    return "callable"
+}

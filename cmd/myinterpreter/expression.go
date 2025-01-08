@@ -6,8 +6,9 @@ type visitor[T string | any] interface {
 	visitGroupingExpr(GroupingExpr) T
 	visitLiteralExpr(LiteralExpr) T
 	visitVarExpr(VarExpr) T
-    visitAssignExpr(AssignExpr) T
-    visitLogicalExpr(LogicalExpr) T
+	visitAssignExpr(AssignExpr) T
+	visitLogicalExpr(LogicalExpr) T
+    visitCallExpr(CallExpr) T
 }
 
 type Expr interface {
@@ -112,43 +113,65 @@ func (var_ *VarExpr) accept(v visitor[any]) any {
 }
 
 type AssignExpr struct {
-    name Token
-    value Expr
+	name  Token
+	value Expr
 }
 
-func NewAssignExpr(name Token, value Expr) *AssignExpr{
-    a := new(AssignExpr)
-    a.name = name
-    a.value = value
-    return a
+func NewAssignExpr(name Token, value Expr) *AssignExpr {
+	a := new(AssignExpr)
+	a.name = name
+	a.value = value
+	return a
 }
 
 func (assign *AssignExpr) print(v visitor[string]) string {
-    return v.visitAssignExpr(*assign)
+	return v.visitAssignExpr(*assign)
 }
 
 func (assign *AssignExpr) accept(v visitor[any]) any {
-    return v.visitAssignExpr(*assign)
+	return v.visitAssignExpr(*assign)
 }
 
 type LogicalExpr struct {
-    left Expr
-    operator Token
-    right Expr
+	left     Expr
+	operator Token
+	right    Expr
 }
 
 func NewLogicalExpr(left Expr, operator Token, right Expr) *LogicalExpr {
-    l := new(LogicalExpr)
-    l.left = left
-    l.right = right
-    l.operator = operator
-    return l
+	l := new(LogicalExpr)
+	l.left = left
+	l.right = right
+	l.operator = operator
+	return l
 }
 
 func (logical *LogicalExpr) accept(v visitor[any]) any {
-    return v.visitLogicalExpr(*logical)
+	return v.visitLogicalExpr(*logical)
 }
 
 func (logical *LogicalExpr) print(v visitor[string]) string {
-    return v.visitLogicalExpr(*logical)
+	return v.visitLogicalExpr(*logical)
+}
+
+type CallExpr struct {
+	callee Expr
+	paren  Token
+	args   []Expr
+}
+
+func NewCallExpr(callee Expr, paren Token, args []Expr) *CallExpr {
+	c := new(CallExpr)
+	c.args = args
+	c.callee = callee
+	c.paren = paren
+	return c
+}
+
+func (call *CallExpr) accept(v visitor[any]) any {
+    return v.visitCallExpr(*call)
+}
+
+func (call *CallExpr) print(v visitor[string]) string {
+    return v.visitCallExpr(*call)
 }

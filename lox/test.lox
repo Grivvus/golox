@@ -1,24 +1,12 @@
-fun main(){
-    print 1 + 2 + 3;
-    print "Hello world!";
-    kitten = Cat(2.5, 15, "meow-meow");
-    kitten.meow();
+// line of comments
+// line of comments 2
+print 98213742123 + 10023;
+print clock() + 56;
+print clock() / 1000;
+print clock() / 1000000;
+fun count(n) {
+  if (n > 1) count(n - 1);
+  print n;
 }
 
-class Animal{
-    init(height, weight){
-        this.height = height;
-        this.weight = weight;
-    }
-}
-
-class Cat < Animal{
-    init(height, weight, meow_sound){
-        super.init(height, weight);
-        this.meow_sound = meow_sound;
-    }
-
-    meow(){
-        print this.meow_sound;
-    }
-}
+count(3);

@@ -106,7 +106,6 @@ func (t *Token) String() string {
 	} else {
 		switch v := t.Literal.(type) {
 		case float64:
-			// wtf golang??!!
 			if v == float64(int(v)) {
 				literalStr = fmt.Sprintf("%.1f", v)
 			} else {

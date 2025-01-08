@@ -44,24 +44,26 @@ func (p *Parser) parseStmts() []Stmt {
 }
 
 func (p *Parser) declaration() Stmt {
-    if p.match(VAR){
-        return p.varStatement()
-    }
-    return p.statement()
+	if p.match(FUN) {
+        return p.funStatement("function")
+	} else if p.match(VAR) {
+		return p.varStatement()
+	}
+	return p.statement()
 }
 
 func (p *Parser) statement() Stmt {
-    if p.match(FOR){
-        return p.forStatement()
-    } else if p.match(IF){
+	if p.match(FOR) {
+		return p.forStatement()
+	} else if p.match(IF) {
 		return p.ifStatement()
 	} else if p.match(PRINT) {
 		return p.printStatement()
-    } else if p.match(WHILE) {
-        return p.whileStatement()
+	} else if p.match(WHILE) {
+		return p.whileStatement()
 	} else if p.match(LEFT_BRACE) {
 		return p.blockStatement()
-    }
+	}
 
 	return p.expressionStatement()
 }
@@ -79,6 +81,49 @@ func (p *Parser) blockStatement() Stmt {
 	return *NewBlock(stmts)
 }
 
+func (p *Parser) funStatement(kind string) Stmt {
+    var parameters []Token = make([]Token, 0)
+    name := p.getCurrent()
+    p.currentIndex++
+    if name.Token != IDENTIFIER{
+        fmt.Fprintf(os.Stderr, "Expect %v name\n", kind)
+        os.Exit(65)
+    }
+    if !p.match(LEFT_PAREN){
+        fmt.Fprintf(os.Stderr, "Expect ( after %v name\n", kind)
+        os.Exit(65)
+    }
+
+	if !p.check(RIGHT_PAREN) {
+        param := p.getCurrent()
+        p.currentIndex++
+		parameters = append(parameters, param)
+		for p.match(COMMA) {
+            if len(parameters) > 255 {
+                fmt.Fprintf(os.Stderr, "too many arguments %v, expect no more than 255\n", len(parameters))
+                os.Exit(70)
+            }
+            param := p.getCurrent()
+            p.currentIndex++
+            if param.Token != IDENTIFIER {
+                fmt.Fprintln(os.Stderr, "Expect parameter name")
+                os.Exit(65)
+            }
+			parameters= append(parameters, param)
+		}
+	}
+    if !p.match(RIGHT_PAREN){
+        fmt.Fprintln(os.Stderr, "Expect ( after parameters")
+        os.Exit(65)
+    }
+    if !p.match(LEFT_BRACE){
+        fmt.Fprintln(os.Stderr, "Expect { before function body")
+        os.Exit(65)
+    }
+    body := p.blockStatement()
+    return NewFunction(name, parameters, body.(Block))
+}
+
 func (p *Parser) varStatement() Stmt {
 	varName := p.incrIndex()
 	var varValue Expr = nil
@@ -91,7 +136,7 @@ func (p *Parser) varStatement() Stmt {
 	}
 	if p.getCurrent().Token != SEMICOLON {
 		fmt.Fprintln(os.Stderr, "Expect ; after variable declaration")
-        os.Exit(65)
+		os.Exit(65)
 	}
 	p.incrIndex()
 	return *NewVar(varName, varValue)
@@ -145,9 +190,9 @@ func (p *Parser) whileStatement() Stmt {
 		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
 		os.Exit(65)
 	}
-    body := p.statement()
+	body := p.statement()
 
-    return *NewWhile(condition, body)
+	return *NewWhile(condition, body)
 }
 
 func (p *Parser) forStatement() Stmt {
@@ -155,52 +200,52 @@ func (p *Parser) forStatement() Stmt {
 		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
 		os.Exit(65)
 	}
-    var initializer Stmt
-    if p.match(SEMICOLON) {
-        initializer = nil
-    } else if p.match(VAR) {
-        initializer = p.varStatement()
-    } else {
-        initializer = p.expressionStatement()
-    }
-    
-    var condition Expr = nil
-    if !p.check(SEMICOLON){
-        condition = p.nextExpr()
-    } 
-    if !p.match(SEMICOLON) {
-        fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v' Expect ';' after expression", p.getCurrent().line, p.getCurrent().Lexeme))
-        os.Exit(65)
-    }
+	var initializer Stmt
+	if p.match(SEMICOLON) {
+		initializer = nil
+	} else if p.match(VAR) {
+		initializer = p.varStatement()
+	} else {
+		initializer = p.expressionStatement()
+	}
 
-    var increment Expr = nil
-    if !p.check(RIGHT_PAREN) {
-        increment = p.nextExpr()
-    }
-    if !p.match(RIGHT_PAREN) {
+	var condition Expr = nil
+	if !p.check(SEMICOLON) {
+		condition = p.nextExpr()
+	}
+	if !p.match(SEMICOLON) {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v' Expect ';' after expression", p.getCurrent().line, p.getCurrent().Lexeme))
+		os.Exit(65)
+	}
+
+	var increment Expr = nil
+	if !p.check(RIGHT_PAREN) {
+		increment = p.nextExpr()
+	}
+	if !p.match(RIGHT_PAREN) {
 		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
 		os.Exit(65)
 	}
 
-    body := p.statement()
+	body := p.statement()
 
-    if increment != nil {
-        stmts := make([]Stmt, 2)
-        stmts[0] = body
-        stmts[1] = *NewExpression(increment)
-        body = *NewBlock(stmts)
-    }
-    if condition ==  nil {
-        condition = NewLiteralExpr(true)
-    }
-    body = *NewWhile(condition, body)
-    if initializer != nil {
-        stmts := make([]Stmt, 2)
-        stmts[0] = initializer
-        stmts[1] = body
-        body = *NewBlock(stmts)
-    }
-    return body
+	if increment != nil {
+		stmts := make([]Stmt, 2)
+		stmts[0] = body
+		stmts[1] = *NewExpression(increment)
+		body = *NewBlock(stmts)
+	}
+	if condition == nil {
+		condition = NewLiteralExpr(true)
+	}
+	body = *NewWhile(condition, body)
+	if initializer != nil {
+		stmts := make([]Stmt, 2)
+		stmts[0] = initializer
+		stmts[1] = body
+		body = *NewBlock(stmts)
+	}
+	return body
 }
 
 func (p *Parser) isAtEnd() bool {
@@ -272,6 +317,18 @@ func (p *Parser) group() Expr {
 	return p.literalExpr()
 }
 
+func (p *Parser) call() Expr {
+	expr := p.group()
+	for true {
+		if p.match(LEFT_PAREN) {
+			expr = p.finishCall(expr)
+		} else {
+			break
+		}
+	}
+	return expr
+}
+
 func (p *Parser) unary() Expr {
 	if p.match(MINUS, BANG) {
 		token := p.getPrev()
@@ -281,7 +338,7 @@ func (p *Parser) unary() Expr {
 		}
 		return NewUnaryExpr(token, expr)
 	}
-	return p.group()
+	return p.call()
 }
 
 func (p *Parser) factor() Expr {
@@ -349,23 +406,23 @@ func (p *Parser) equality() Expr {
 }
 
 func (p *Parser) and() Expr {
-    expr := p.equality()
-    for p.match(OR) {
-        operator := p.getPrev()
-        right := p.equality()
-        expr = NewLogicalExpr(expr, operator, right)
-    }
-    return expr
+	expr := p.equality()
+	for p.match(OR) {
+		operator := p.getPrev()
+		right := p.equality()
+		expr = NewLogicalExpr(expr, operator, right)
+	}
+	return expr
 }
 
 func (p *Parser) or() Expr {
-    expr := p.and()
-    for p.match(AND) {
-        operator := p.getPrev()
-        right := p.and()
-        expr = NewLogicalExpr(expr, operator, right)
-    }
-    return expr
+	expr := p.and()
+	for p.match(AND) {
+		operator := p.getPrev()
+		right := p.and()
+		expr = NewLogicalExpr(expr, operator, right)
+	}
+	return expr
 }
 
 func (p *Parser) assignment() Expr {
@@ -387,4 +444,26 @@ func (p *Parser) assignment() Expr {
 
 func (p *Parser) nextExpr() Expr {
 	return p.assignment()
+}
+
+func (p *Parser) finishCall(callee Expr) Expr {
+	arguments := make([]Expr, 0, 0)
+	if !p.check(RIGHT_PAREN) {
+		arguments = append(arguments, p.nextExpr())
+		for p.match(COMMA) {
+			arguments = append(arguments, p.nextExpr())
+		}
+		if len(arguments) > 255 {
+			fmt.Fprintf(os.Stderr, "too many arguments %v, expect no more than 255\n", len(arguments))
+			os.Exit(70)
+		}
+	}
+
+	rp := p.getCurrent()
+	if rp.Token != RIGHT_PAREN {
+		fmt.Fprintln(os.Stderr, "expected ')' after arguments")
+		os.Exit(70)
+	}
+	p.currentIndex++
+	return NewCallExpr(callee, rp, arguments)
 }
