@@ -1,6 +1,9 @@
 // line of comments
 // line of comments 2
 print 98213742123 + 10023;
+fun name(){}
+print clock;
+print name;
 print clock() + 56;
 print clock() / 1000;
 print clock() / 1000000;

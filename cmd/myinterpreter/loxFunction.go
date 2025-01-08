@@ -1,7 +1,7 @@
 package main
 
 import (
-
+    "fmt"
 )
 
 type LoxFunction struct {
@@ -29,4 +29,8 @@ func (lf *LoxFunction) call(i Interpreter, args []any) any {
     }
     i.executeBlock(lf.declaration.body, funState)
     return 0;
+}
+
+func (lf *LoxFunction) String() string {
+    return fmt.Sprintf("<fn %v>", lf.declaration.name.Lexeme)
 }

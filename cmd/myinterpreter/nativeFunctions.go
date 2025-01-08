@@ -18,6 +18,6 @@ func (t loxTime) arity() int {
 	return 0
 }
 
-func (t loxTime) toString() string {
-    return "<native fun>";
+func (t loxTime) String() string {
+    return "<native fn>";
 }
