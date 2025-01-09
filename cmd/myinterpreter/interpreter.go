@@ -14,6 +14,7 @@ func NewInterpreter() *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
 	i.state.define("clock", newLoxTime())
+    i.state.define("retVal", nil)
 	return i
 }
 
@@ -186,7 +187,7 @@ func (i Interpreter) visitPrintStmt(stmt Print) {
 			if v == float64(int64(v)) {
 				fmt.Println(int64(v))
 			} else {
-                fmt.Println(v)
+				fmt.Println(v)
 			}
 		default:
 			fmt.Println(value)
@@ -225,6 +226,17 @@ func (i Interpreter) visitWhileStmt(stmt While) {
 func (i Interpreter) visitFunctionStmt(stmt Function) {
 	fn := NewLoxFunction(stmt, *i.state, false)
 	i.state.define(stmt.name.Lexeme, fn)
+}
+
+func (i Interpreter) visitReturnStmt(stmt Return) {
+    var result any = nil
+    if stmt.value != nil {
+        result = i.evaluate(stmt.value)
+    }
+    if result == nil{
+        result = "nil"
+    } 
+    panic(result)
 }
 
 func (i Interpreter) executeBlock(block Block, state *State) {

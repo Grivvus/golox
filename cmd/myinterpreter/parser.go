@@ -58,6 +58,8 @@ func (p *Parser) statement() Stmt {
 		return p.ifStatement()
 	} else if p.match(PRINT) {
 		return p.printStatement()
+	} else if p.match(RETURN) {
+        return p.returnStatement()
 	} else if p.match(WHILE) {
 		return p.whileStatement()
 	} else if p.match(LEFT_BRACE) {
@@ -114,6 +116,19 @@ func (p *Parser) funStatement(kind string) Stmt {
 	}
 	body := p.blockStatement()
 	return NewFunction(name, parameters, body.(Block))
+}
+
+func (p *Parser) returnStatement() Stmt {
+    retKeyWord := p.getPrev()
+    var value Expr = nil
+    if !p.check(SEMICOLON){
+        value = p.nextExpr()
+    }
+
+    if !p.match(SEMICOLON){
+        p.throwParserError("Expect ';' after expression")
+    }
+    return NewReturn(retKeyWord, value)
 }
 
 func (p *Parser) varStatement() Stmt {
@@ -444,8 +459,7 @@ func (p *Parser) nextExpr() Expr {
 	return p.assignment()
 }
 
-
 func (p *Parser) throwParserError(message string) {
 	fmt.Fprintf(os.Stderr, "[line %v] error at %v: %v\n", p.getCurrent().line, p.getCurrent().Lexeme, message)
-    os.Exit(65)
+	os.Exit(65)
 }

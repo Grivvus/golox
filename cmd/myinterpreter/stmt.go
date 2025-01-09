@@ -5,9 +5,10 @@ type stmtVisitor interface {
 	visitExpressionStmt(stmt Expression)
 	visitVarStmt(stmt Var)
 	visitBlockStmt(stmt Block)
-    visitIfStmt(stmt If)
-    visitWhileStmt(stmt While)
-    visitFunctionStmt(stmt Function)
+	visitIfStmt(stmt If)
+	visitWhileStmt(stmt While)
+	visitFunctionStmt(stmt Function)
+	visitReturnStmt(stmt Return)
 }
 
 type Stmt interface {
@@ -64,7 +65,7 @@ type Block struct {
 
 func NewBlock(stmts []Stmt) *Block {
 	b := new(Block)
-    b.stmts = stmts
+	b.stmts = stmts
 	return b
 }
 
@@ -73,53 +74,69 @@ func (b Block) accept(vis stmtVisitor) {
 }
 
 type If struct {
-    condition Expr
-    thenBranch Stmt
-    elseBranch Stmt
+	condition  Expr
+	thenBranch Stmt
+	elseBranch Stmt
 }
 
 func NewIf(condition Expr, thenBranch, elseBranch Stmt) *If {
-    i := new(If)
-    i.condition = condition
-    i.thenBranch = thenBranch
-    i.elseBranch = elseBranch
-    return i
+	i := new(If)
+	i.condition = condition
+	i.thenBranch = thenBranch
+	i.elseBranch = elseBranch
+	return i
 }
 
-func (i If) accept(vis stmtVisitor){
-    vis.visitIfStmt(i)
+func (i If) accept(vis stmtVisitor) {
+	vis.visitIfStmt(i)
 }
 
 type While struct {
-    condition Expr
-    body Stmt
+	condition Expr
+	body      Stmt
 }
 
 func NewWhile(condition Expr, body Stmt) *While {
-    w := new(While)
-    w.body = body
-    w.condition = condition
-    return w
+	w := new(While)
+	w.body = body
+	w.condition = condition
+	return w
 }
 
 func (w While) accept(vis stmtVisitor) {
-    vis.visitWhileStmt(w)
+	vis.visitWhileStmt(w)
 }
 
 type Function struct {
-    name Token
-    arguments []Token
-    body Block
+	name      Token
+	arguments []Token
+	body      Block
 }
 
-func NewFunction(name Token, arguments []Token, body Block) *Function{
-    fn := new(Function)
-    fn.name = name
-    fn.arguments = arguments
-    fn.body = body
-    return fn
+func NewFunction(name Token, arguments []Token, body Block) *Function {
+	fn := new(Function)
+	fn.name = name
+	fn.arguments = arguments
+	fn.body = body
+	return fn
 }
 
-func (fn Function) accept(vis stmtVisitor){
-    vis.visitFunctionStmt(fn)
+func (fn Function) accept(vis stmtVisitor) {
+	vis.visitFunctionStmt(fn)
+}
+
+type Return struct {
+	retKeyWord Token
+	value      Expr
+}
+
+func NewReturn(retKeyWord Token, value Expr) *Return {
+	ret := new(Return)
+	ret.retKeyWord = retKeyWord
+	ret.value = value
+	return ret
+}
+
+func (ret Return) accept(vis stmtVisitor) {
+	vis.visitReturnStmt(ret)
 }
