@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 )
@@ -45,7 +44,7 @@ func (p *Parser) parseStmts() []Stmt {
 
 func (p *Parser) declaration() Stmt {
 	if p.match(FUN) {
-        return p.funStatement("function")
+		return p.funStatement("function")
 	} else if p.match(VAR) {
 		return p.varStatement()
 	}
@@ -74,69 +73,60 @@ func (p *Parser) blockStatement() Stmt {
 		stmts = append(stmts, p.declaration())
 	}
 	if p.getCurrent().Token != RIGHT_BRACE {
-		fmt.Fprintln(os.Stderr, "Expect } after block statement")
-		os.Exit(65)
+		p.throwParserError("Expect '}' after block statement")
 	}
 	p.incrIndex()
 	return *NewBlock(stmts)
 }
 
 func (p *Parser) funStatement(kind string) Stmt {
-    var parameters []Token = make([]Token, 0)
-    name := p.getCurrent()
-    p.currentIndex++
-    if name.Token != IDENTIFIER{
-        fmt.Fprintf(os.Stderr, "Expect %v name\n", kind)
-        os.Exit(65)
-    }
-    if !p.match(LEFT_PAREN){
-        fmt.Fprintf(os.Stderr, "Expect ( after %v name\n", kind)
-        os.Exit(65)
-    }
+	var parameters []Token = make([]Token, 0)
+	name := p.getCurrent()
+	p.currentIndex++
+	if name.Token != IDENTIFIER {
+		p.throwParserError(fmt.Sprintf("Expect %v name", kind))
+	}
+	if !p.match(LEFT_PAREN) {
+		p.throwParserError("Expect '(' before condition expression")
+	}
 
 	if !p.check(RIGHT_PAREN) {
-        param := p.getCurrent()
-        p.currentIndex++
+		param := p.getCurrent()
+		p.currentIndex++
 		parameters = append(parameters, param)
 		for p.match(COMMA) {
-            if len(parameters) > 255 {
-                fmt.Fprintf(os.Stderr, "too many arguments %v, expect no more than 255\n", len(parameters))
-                os.Exit(70)
-            }
-            param := p.getCurrent()
-            p.currentIndex++
-            if param.Token != IDENTIFIER {
-                fmt.Fprintln(os.Stderr, "Expect parameter name")
-                os.Exit(65)
-            }
-			parameters= append(parameters, param)
+			if len(parameters) > 255 {
+				p.throwParserError(fmt.Sprintf("too many arguments %v, expect no more than 255", len(parameters)))
+			}
+			param := p.getCurrent()
+			p.currentIndex++
+			if param.Token != IDENTIFIER {
+				p.throwParserError("Expect parametr name")
+			}
+			parameters = append(parameters, param)
 		}
 	}
-    if !p.match(RIGHT_PAREN){
-        fmt.Fprintln(os.Stderr, "Expect ( after parameters")
-        os.Exit(65)
-    }
-    if !p.match(LEFT_BRACE){
-        fmt.Fprintln(os.Stderr, "Expect { before function body")
-        os.Exit(65)
-    }
-    body := p.blockStatement()
-    return NewFunction(name, parameters, body.(Block))
+	if !p.match(RIGHT_PAREN) {
+		p.throwParserError("Expect '(' after parameters")
+	}
+	if !p.match(LEFT_BRACE) {
+		p.throwParserError("Expect '{' before function body")
+	}
+	body := p.blockStatement()
+	return NewFunction(name, parameters, body.(Block))
 }
 
 func (p *Parser) varStatement() Stmt {
 	varName := p.incrIndex()
 	var varValue Expr = nil
 	if varName.Token != IDENTIFIER {
-		fmt.Fprintln(os.Stderr, "Expect variable name.")
-		os.Exit(65)
+		p.throwParserError("Expect variable name.")
 	}
 	if p.match(EQUAL) {
 		varValue = p.nextExpr()
 	}
 	if p.getCurrent().Token != SEMICOLON {
-		fmt.Fprintln(os.Stderr, "Expect ; after variable declaration")
-		os.Exit(65)
+		p.throwParserError("Expect ';' after variable declaration")
 	}
 	p.incrIndex()
 	return *NewVar(varName, varValue)
@@ -145,8 +135,7 @@ func (p *Parser) varStatement() Stmt {
 func (p *Parser) printStatement() Stmt {
 	expr := p.nextExpr()
 	if !p.match(SEMICOLON) {
-		fmt.Fprintln(os.Stderr, "Expect ; after expression")
-		os.Exit(65)
+		p.throwParserError("Expect ';' after expression")
 	}
 	return *NewPrint(expr)
 }
@@ -154,21 +143,18 @@ func (p *Parser) printStatement() Stmt {
 func (p *Parser) expressionStatement() Stmt {
 	expr := p.nextExpr()
 	if !p.match(SEMICOLON) {
-		fmt.Fprintln(os.Stderr, "Expect ; after expression")
-		os.Exit(65)
+		p.throwParserError("Expect ';' after expression")
 	}
 	return *NewExpression(expr)
 }
 
 func (p *Parser) ifStatement() Stmt {
 	if !p.match(LEFT_PAREN) {
-		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
-		os.Exit(65)
+		p.throwParserError("Expect '(' before condition expression")
 	}
 	condition := p.nextExpr()
 	if !p.match(RIGHT_PAREN) {
-		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
-		os.Exit(65)
+		p.throwParserError("Expect ')' after condition expression")
 	}
 	thenBranch := p.statement()
 	var elseBranch Stmt
@@ -182,13 +168,12 @@ func (p *Parser) ifStatement() Stmt {
 
 func (p *Parser) whileStatement() Stmt {
 	if !p.match(LEFT_PAREN) {
-		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
+		p.throwParserError("Expect '(' before condition expression")
 		os.Exit(65)
 	}
 	condition := p.nextExpr()
 	if !p.match(RIGHT_PAREN) {
-		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
-		os.Exit(65)
+		p.throwParserError("Expect ')' after condition expression")
 	}
 	body := p.statement()
 
@@ -197,8 +182,7 @@ func (p *Parser) whileStatement() Stmt {
 
 func (p *Parser) forStatement() Stmt {
 	if !p.match(LEFT_PAREN) {
-		fmt.Fprintln(os.Stderr, "Expect ( before condition expression")
-		os.Exit(65)
+		p.throwParserError("Expect '(' before condition expression")
 	}
 	var initializer Stmt
 	if p.match(SEMICOLON) {
@@ -214,8 +198,7 @@ func (p *Parser) forStatement() Stmt {
 		condition = p.nextExpr()
 	}
 	if !p.match(SEMICOLON) {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v' Expect ';' after expression", p.getCurrent().line, p.getCurrent().Lexeme))
-		os.Exit(65)
+		p.throwParserError("Expect ';' after expression")
 	}
 
 	var increment Expr = nil
@@ -223,8 +206,7 @@ func (p *Parser) forStatement() Stmt {
 		increment = p.nextExpr()
 	}
 	if !p.match(RIGHT_PAREN) {
-		fmt.Fprintln(os.Stderr, "Expect ) after condition expression")
-		os.Exit(65)
+		p.throwParserError("Expect ) after condition expression")
 	}
 
 	body := p.statement()
@@ -294,8 +276,7 @@ func (p *Parser) literalExpr() Expr {
 		return NewVarExpr(p.getPrev())
 	}
 	p.currentIndex++
-	p.exitCode = 65
-	fmt.Fprintln(os.Stderr, fmt.Sprintf("[line %v] Error at '%v': Expect expression.", p.getCurrent().line, p.getCurrent().Lexeme))
+	p.throwParserError("Expect expression")
 	return nil
 }
 
@@ -306,15 +287,33 @@ func (p *Parser) group() Expr {
 			return nil
 		}
 		if !p.check(RIGHT_PAREN) {
-			p.exitCode = 65
-			fmt.Fprintln(os.Stderr, errors.New("Expect ) after expression"))
-			os.Exit(65)
+			p.throwParserError("Expect ) after expression")
 		} else {
 			p.currentIndex++
 		}
 		return NewGroupingExpr(expr)
 	}
 	return p.literalExpr()
+}
+
+func (p *Parser) finishCall(callee Expr) Expr {
+	arguments := make([]Expr, 0, 0)
+	if !p.check(RIGHT_PAREN) {
+		arguments = append(arguments, p.nextExpr())
+		for p.match(COMMA) {
+			arguments = append(arguments, p.nextExpr())
+		}
+		if len(arguments) > 255 {
+			p.throwParserError(fmt.Sprintf("too many arguments %v, expect no more than 255", len(arguments)))
+		}
+	}
+
+	rp := p.getCurrent()
+	if rp.Token != RIGHT_PAREN {
+		p.throwParserError("expected ')' after arguments")
+	}
+	p.currentIndex++
+	return NewCallExpr(callee, rp, arguments)
 }
 
 func (p *Parser) call() Expr {
@@ -435,8 +434,7 @@ func (p *Parser) assignment() Expr {
 			name := expr.(*VarExpr).name
 			return NewAssignExpr(name, value)
 		default:
-			fmt.Fprintln(os.Stderr, "Invalid assignment target")
-			os.Exit(70)
+			p.throwParserError("Invalid assignment target")
 		}
 	}
 	return expr
@@ -446,24 +444,8 @@ func (p *Parser) nextExpr() Expr {
 	return p.assignment()
 }
 
-func (p *Parser) finishCall(callee Expr) Expr {
-	arguments := make([]Expr, 0, 0)
-	if !p.check(RIGHT_PAREN) {
-		arguments = append(arguments, p.nextExpr())
-		for p.match(COMMA) {
-			arguments = append(arguments, p.nextExpr())
-		}
-		if len(arguments) > 255 {
-			fmt.Fprintf(os.Stderr, "too many arguments %v, expect no more than 255\n", len(arguments))
-			os.Exit(70)
-		}
-	}
 
-	rp := p.getCurrent()
-	if rp.Token != RIGHT_PAREN {
-		fmt.Fprintln(os.Stderr, "expected ')' after arguments")
-		os.Exit(70)
-	}
-	p.currentIndex++
-	return NewCallExpr(callee, rp, arguments)
+func (p *Parser) throwParserError(message string) {
+	fmt.Fprintf(os.Stderr, "[line %v] error at %v: %v\n", p.getCurrent().line, p.getCurrent().Lexeme, message)
+    os.Exit(65)
 }

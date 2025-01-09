@@ -1,15 +1,2 @@
-// line of comments
-// line of comments 2
-print 98213742123 + 10023;
-fun name(){}
-print clock;
-print name;
-print clock() + 56;
-print clock() / 1000;
-print clock() / 1000000;
-fun count(n) {
-  if (n > 1) count(n - 1);
-  print n;
-}
-
-count(3);
+fun f() 74;
+print f();
