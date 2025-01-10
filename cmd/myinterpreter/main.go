@@ -69,7 +69,7 @@ func main() {
 	} else if command == "evaluate" {
 		parser := NewParser(tokens)
 		exprs := parser.parseExprs()
-		interp := NewInterpreter()
+		interp := NewInterpreter(parser)
 		var res []any
 		for _, expr := range exprs {
 			res = append(res, expr.accept(interp))
@@ -83,7 +83,7 @@ func main() {
 		}
 	} else if command == "run" {
         parser := NewParser(tokens)
-        interp := NewInterpreter()
+        interp := NewInterpreter(parser)
         stmts := parser.parseStmts()
         for _, stmt := range stmts {
             interp.execute(stmt)

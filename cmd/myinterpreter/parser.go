@@ -328,7 +328,7 @@ func (p *Parser) finishCall(callee Expr) Expr {
 		p.throwParserError("expected ')' after arguments")
 	}
 	p.currentIndex++
-	return NewCallExpr(callee, rp, arguments)
+	return NewCallExpr(callee, arguments)
 }
 
 func (p *Parser) call() Expr {

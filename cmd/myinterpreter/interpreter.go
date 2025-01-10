@@ -8,13 +8,14 @@ import (
 
 type Interpreter struct {
 	state *State
+    parser *Parser
 }
 
-func NewInterpreter() *Interpreter {
+func NewInterpreter(parser *Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
 	i.state.define("clock", newLoxTime())
-    i.state.define("retVal", nil)
+    i.parser = parser
 	return i
 }
 
@@ -156,6 +157,14 @@ func (i Interpreter) visitLogicalExpr(expr LogicalExpr) any {
 
 func (i Interpreter) visitCallExpr(expr CallExpr) any {
 	callee := i.evaluate(expr.callee)
+	switch callee.(type) {
+	case LoxCallable:
+		goto FINE
+	default:
+		fmt.Fprintf(os.Stderr, "Can only call functions and classes.\n[line %v]", i.parser.getPrev().line)
+		os.Exit(70)
+	}
+FINE:
 	arguments := make([]any, 0)
 	for _, arg := range expr.args {
 		arguments = append(arguments, i.evaluate(arg))
@@ -229,14 +238,14 @@ func (i Interpreter) visitFunctionStmt(stmt Function) {
 }
 
 func (i Interpreter) visitReturnStmt(stmt Return) {
-    var result any = nil
-    if stmt.value != nil {
-        result = i.evaluate(stmt.value)
-    }
-    if result == nil{
-        result = "nil"
-    } 
-    panic(result)
+	var result any = nil
+	if stmt.value != nil {
+		result = i.evaluate(stmt.value)
+	}
+	if result == nil {
+		result = "nil"
+	}
+	panic(result)
 }
 
 func (i Interpreter) executeBlock(block Block, state *State) {
