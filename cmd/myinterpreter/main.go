@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
-    "bytes"
 )
 
 func main() {
@@ -82,11 +82,13 @@ func main() {
 			}
 		}
 	} else if command == "run" {
-        parser := NewParser(tokens)
-        interp := NewInterpreter(parser)
-        stmts := parser.parseStmts()
-        for _, stmt := range stmts {
-            interp.execute(stmt)
-        }
+		parser := NewParser(tokens)
+		interp := NewInterpreter(parser)
+		resolver := NewResolver(interp)
+		stmts := parser.parseStmts()
+		resolver.resolveStmts(stmts)
+		for _, stmt := range stmts {
+			interp.execute(stmt)
+		}
 	}
 }

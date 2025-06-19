@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-
 type astPrinter struct {
 }
 
@@ -29,19 +28,19 @@ func (printer *astPrinter) parenthesize(name string, exprs ...Expr) string {
 	return builder.String()
 }
 
-func (printer astPrinter) visitUnaryExpr(expr UnaryExpr) string {
+func (printer astPrinter) visitUnaryExpr(expr *UnaryExpr) string {
 	return printer.parenthesize(expr.operator.Lexeme, expr.right)
 }
 
-func (printer astPrinter) visitBinaryExpr(expr BinaryExpr) string {
+func (printer astPrinter) visitBinaryExpr(expr *BinaryExpr) string {
 	return printer.parenthesize(expr.operator.Lexeme, expr.left, expr.right)
 }
 
-func (printer astPrinter) visitGroupingExpr(expr GroupingExpr) string {
+func (printer astPrinter) visitGroupingExpr(expr *GroupingExpr) string {
 	return printer.parenthesize("group", expr.expr)
 }
 
-func (printer astPrinter) visitLiteralExpr(expr LiteralExpr) string {
+func (printer astPrinter) visitLiteralExpr(expr *LiteralExpr) string {
 	if expr.value == nil {
 		return "nil"
 	}
@@ -54,18 +53,18 @@ func (printer astPrinter) visitLiteralExpr(expr LiteralExpr) string {
 	return fmt.Sprint(expr.value)
 }
 
-func (printer astPrinter) visitVarExpr(expr VarExpr) string {
-    return fmt.Sprintf("var %v\n", expr.name.Lexeme)
+func (printer astPrinter) visitVarExpr(expr *VarExpr) string {
+	return fmt.Sprintf("var %v\n", expr.name.Lexeme)
 }
 
-func (printer astPrinter) visitAssignExpr(expr AssignExpr) string {
-    return fmt.Sprintf("var %v=%v\n", expr.name, expr.value)
+func (printer astPrinter) visitAssignExpr(expr *AssignExpr) string {
+	return fmt.Sprintf("var %v=%v\n", expr.name, expr.value)
 }
 
-func (printer astPrinter) visitLogicalExpr(expr LogicalExpr) string {
+func (printer astPrinter) visitLogicalExpr(expr *LogicalExpr) string {
 	return printer.parenthesize(expr.operator.Lexeme, expr.left, expr.right)
 }
 
-func (printer astPrinter) visitCallExpr(expr CallExpr) string {
-    return "callable"
+func (printer astPrinter) visitCallExpr(expr *CallExpr) string {
+	return "callable"
 }

@@ -1,14 +1,14 @@
 package main
 
 type stmtVisitor interface {
-	visitPrintStmt(stmt Print)
-	visitExpressionStmt(stmt Expression)
-	visitVarStmt(stmt Var)
-	visitBlockStmt(stmt Block)
-	visitIfStmt(stmt If)
-	visitWhileStmt(stmt While)
-	visitFunctionStmt(stmt Function)
-	visitReturnStmt(stmt Return)
+	visitPrintStmt(stmt *Print)
+	visitExpressionStmt(stmt *Expression)
+	visitVarStmt(stmt *Var)
+	visitBlockStmt(stmt *Block)
+	visitIfStmt(stmt *If)
+	visitWhileStmt(stmt *While)
+	visitFunctionStmt(stmt *Function)
+	visitReturnStmt(stmt *Return)
 }
 
 type Stmt interface {
@@ -25,7 +25,7 @@ func NewPrint(expr Expr) *Print {
 	return p
 }
 
-func (p Print) accept(vis stmtVisitor) {
+func (p *Print) accept(vis stmtVisitor) {
 	vis.visitPrintStmt(p)
 }
 
@@ -39,7 +39,7 @@ func NewExpression(expr Expr) *Expression {
 	return e
 }
 
-func (e Expression) accept(vis stmtVisitor) {
+func (e *Expression) accept(vis stmtVisitor) {
 	vis.visitExpressionStmt(e)
 }
 
@@ -55,7 +55,7 @@ func NewVar(varName Token, varValue Expr) *Var {
 	return v
 }
 
-func (v Var) accept(vis stmtVisitor) {
+func (v *Var) accept(vis stmtVisitor) {
 	vis.visitVarStmt(v)
 }
 
@@ -69,7 +69,7 @@ func NewBlock(stmts []Stmt) *Block {
 	return b
 }
 
-func (b Block) accept(vis stmtVisitor) {
+func (b *Block) accept(vis stmtVisitor) {
 	vis.visitBlockStmt(b)
 }
 
@@ -87,7 +87,7 @@ func NewIf(condition Expr, thenBranch, elseBranch Stmt) *If {
 	return i
 }
 
-func (i If) accept(vis stmtVisitor) {
+func (i *If) accept(vis stmtVisitor) {
 	vis.visitIfStmt(i)
 }
 
@@ -103,17 +103,17 @@ func NewWhile(condition Expr, body Stmt) *While {
 	return w
 }
 
-func (w While) accept(vis stmtVisitor) {
+func (w *While) accept(vis stmtVisitor) {
 	vis.visitWhileStmt(w)
 }
 
 type Function struct {
 	name      Token
 	arguments []Token
-	body      Block
+	body      *Block
 }
 
-func NewFunction(name Token, arguments []Token, body Block) *Function {
+func NewFunction(name Token, arguments []Token, body *Block) *Function {
 	fn := new(Function)
 	fn.name = name
 	fn.arguments = arguments
@@ -121,7 +121,7 @@ func NewFunction(name Token, arguments []Token, body Block) *Function {
 	return fn
 }
 
-func (fn Function) accept(vis stmtVisitor) {
+func (fn *Function) accept(vis stmtVisitor) {
 	vis.visitFunctionStmt(fn)
 }
 
@@ -137,6 +137,6 @@ func NewReturn(retKeyWord Token, value Expr) *Return {
 	return ret
 }
 
-func (ret Return) accept(vis stmtVisitor) {
+func (ret *Return) accept(vis stmtVisitor) {
 	vis.visitReturnStmt(ret)
 }

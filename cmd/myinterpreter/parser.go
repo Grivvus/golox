@@ -59,7 +59,7 @@ func (p *Parser) statement() Stmt {
 	} else if p.match(PRINT) {
 		return p.printStatement()
 	} else if p.match(RETURN) {
-        return p.returnStatement()
+		return p.returnStatement()
 	} else if p.match(WHILE) {
 		return p.whileStatement()
 	} else if p.match(LEFT_BRACE) {
@@ -78,7 +78,7 @@ func (p *Parser) blockStatement() Stmt {
 		p.throwParserError("Expect '}' after block statement")
 	}
 	p.incrIndex()
-	return *NewBlock(stmts)
+	return NewBlock(stmts)
 }
 
 func (p *Parser) funStatement(kind string) Stmt {
@@ -115,20 +115,20 @@ func (p *Parser) funStatement(kind string) Stmt {
 		p.throwParserError("Expect '{' before function body")
 	}
 	body := p.blockStatement()
-	return NewFunction(name, parameters, body.(Block))
+	return NewFunction(name, parameters, body.(*Block))
 }
 
 func (p *Parser) returnStatement() Stmt {
-    retKeyWord := p.getPrev()
-    var value Expr = nil
-    if !p.check(SEMICOLON){
-        value = p.nextExpr()
-    }
+	retKeyWord := p.getPrev()
+	var value Expr = nil
+	if !p.check(SEMICOLON) {
+		value = p.nextExpr()
+	}
 
-    if !p.match(SEMICOLON){
-        p.throwParserError("Expect ';' after expression")
-    }
-    return NewReturn(retKeyWord, value)
+	if !p.match(SEMICOLON) {
+		p.throwParserError("Expect ';' after expression")
+	}
+	return NewReturn(retKeyWord, value)
 }
 
 func (p *Parser) varStatement() Stmt {
@@ -144,7 +144,7 @@ func (p *Parser) varStatement() Stmt {
 		p.throwParserError("Expect ';' after variable declaration")
 	}
 	p.incrIndex()
-	return *NewVar(varName, varValue)
+	return NewVar(varName, varValue)
 }
 
 func (p *Parser) printStatement() Stmt {
@@ -152,7 +152,7 @@ func (p *Parser) printStatement() Stmt {
 	if !p.match(SEMICOLON) {
 		p.throwParserError("Expect ';' after expression")
 	}
-	return *NewPrint(expr)
+	return NewPrint(expr)
 }
 
 func (p *Parser) expressionStatement() Stmt {
@@ -160,7 +160,7 @@ func (p *Parser) expressionStatement() Stmt {
 	if !p.match(SEMICOLON) {
 		p.throwParserError("Expect ';' after expression")
 	}
-	return *NewExpression(expr)
+	return NewExpression(expr)
 }
 
 func (p *Parser) ifStatement() Stmt {
@@ -178,7 +178,7 @@ func (p *Parser) ifStatement() Stmt {
 	} else {
 		elseBranch = nil
 	}
-	return *NewIf(condition, thenBranch, elseBranch)
+	return NewIf(condition, thenBranch, elseBranch)
 }
 
 func (p *Parser) whileStatement() Stmt {
@@ -192,13 +192,14 @@ func (p *Parser) whileStatement() Stmt {
 	}
 	body := p.statement()
 
-	return *NewWhile(condition, body)
+	return NewWhile(condition, body)
 }
 
 func (p *Parser) forStatement() Stmt {
 	if !p.match(LEFT_PAREN) {
 		p.throwParserError("Expect '(' before condition expression")
 	}
+
 	var initializer Stmt
 	if p.match(SEMICOLON) {
 		initializer = nil
@@ -213,7 +214,7 @@ func (p *Parser) forStatement() Stmt {
 		condition = p.nextExpr()
 	}
 	if !p.match(SEMICOLON) {
-		p.throwParserError("Expect ';' after expression")
+		p.throwParserError("Expect ';' after loop condition")
 	}
 
 	var increment Expr = nil
@@ -221,28 +222,32 @@ func (p *Parser) forStatement() Stmt {
 		increment = p.nextExpr()
 	}
 	if !p.match(RIGHT_PAREN) {
-		p.throwParserError("Expect ) after condition expression")
+		p.throwParserError("Expect ')' after for clauses")
 	}
 
 	body := p.statement()
 
 	if increment != nil {
-		stmts := make([]Stmt, 2)
-		stmts[0] = body
-		stmts[1] = *NewExpression(increment)
-		body = *NewBlock(stmts)
+		body = &Block{
+			[]Stmt{
+				body,
+				&Expression{increment},
+			},
+		}
 	}
+
 	if condition == nil {
-		condition = NewLiteralExpr(true)
+		condition = &LiteralExpr{value: true}
 	}
-	body = *NewWhile(condition, body)
+	loop := While{condition: condition, body: body}
+
 	if initializer != nil {
-		stmts := make([]Stmt, 2)
-		stmts[0] = initializer
-		stmts[1] = body
-		body = *NewBlock(stmts)
+		return &Block{
+			stmts: []Stmt{initializer, &loop},
+		}
 	}
-	return body
+
+	return &loop
 }
 
 func (p *Parser) isAtEnd() bool {

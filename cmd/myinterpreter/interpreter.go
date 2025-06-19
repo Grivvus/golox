@@ -7,15 +7,19 @@ import (
 )
 
 type Interpreter struct {
-	state *State
-    parser *Parser
+	state   *State
+	globals *State
+	locals  map[Expr]int
+	parser  *Parser
 }
 
 func NewInterpreter(parser *Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
 	i.state.define("clock", newLoxTime())
-    i.parser = parser
+	i.globals = i.state
+	i.locals = make(map[Expr]int, 0)
+	i.parser = parser
 	return i
 }
 
@@ -25,19 +29,19 @@ func (i Interpreter) interpret(statements []Stmt) {
 	}
 }
 
-func (i Interpreter) visitVarExpr(expr VarExpr) any {
-	return i.state.access(expr.name.Lexeme)
+func (i Interpreter) visitVarExpr(expr *VarExpr) any {
+	return i.lookUpVariable(expr.name, expr)
 }
 
-func (i Interpreter) visitLiteralExpr(expr LiteralExpr) any {
+func (i Interpreter) visitLiteralExpr(expr *LiteralExpr) any {
 	return expr.value
 }
 
-func (i Interpreter) visitGroupingExpr(expr GroupingExpr) any {
+func (i Interpreter) visitGroupingExpr(expr *GroupingExpr) any {
 	return i.evaluate(expr.expr)
 }
 
-func (i Interpreter) visitUnaryExpr(expr UnaryExpr) any {
+func (i Interpreter) visitUnaryExpr(expr *UnaryExpr) any {
 	right := i.evaluate(expr.right)
 
 	switch expr.operator.Token {
@@ -56,7 +60,7 @@ func (i Interpreter) visitUnaryExpr(expr UnaryExpr) any {
 	return nil
 }
 
-func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
+func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 	left := i.evaluate(expr.left)
 	right := i.evaluate(expr.right)
 
@@ -136,11 +140,11 @@ func (i Interpreter) visitBinaryExpr(expr BinaryExpr) any {
 	return nil
 }
 
-func (i Interpreter) visitDefinedVar(expr VarExpr) any {
+func (i Interpreter) visitDefinedVar(expr *VarExpr) any {
 	return i.state.access(expr.name.Lexeme)
 }
 
-func (i Interpreter) visitLogicalExpr(expr LogicalExpr) any {
+func (i Interpreter) visitLogicalExpr(expr *LogicalExpr) any {
 	left := i.evaluate(expr.left)
 	if expr.operator.Token == OR {
 		if booleanCast(left) == true {
@@ -155,7 +159,7 @@ func (i Interpreter) visitLogicalExpr(expr LogicalExpr) any {
 	return right
 }
 
-func (i Interpreter) visitCallExpr(expr CallExpr) any {
+func (i Interpreter) visitCallExpr(expr *CallExpr) any {
 	callee := i.evaluate(expr.callee)
 	switch callee.(type) {
 	case LoxCallable:
@@ -178,17 +182,22 @@ FINE:
 	return function.call(i, arguments)
 }
 
-func (i Interpreter) visitAssignExpr(expr AssignExpr) any {
+func (i Interpreter) visitAssignExpr(expr *AssignExpr) any {
 	value := i.evaluate(expr.value)
-	i.state.assign(expr.name.Lexeme, value)
+	distance, ok := i.locals[expr]
+	if ok {
+		i.state.assignAt(distance, expr.name.Lexeme, value)
+	} else {
+		i.globals.assign(expr.name.Lexeme, value)
+	}
 	return value
 }
 
-func (i Interpreter) visitExpressionStmt(stmt Expression) {
+func (i Interpreter) visitExpressionStmt(stmt *Expression) {
 	i.evaluate(stmt.expr)
 }
 
-func (i Interpreter) visitPrintStmt(stmt Print) {
+func (i Interpreter) visitPrintStmt(stmt *Print) {
 	value := i.evaluate(stmt.expr)
 	if value != nil {
 		switch v := value.(type) {
@@ -206,19 +215,19 @@ func (i Interpreter) visitPrintStmt(stmt Print) {
 	}
 }
 
-func (i Interpreter) visitVarStmt(stmt Var) {
-	var value any
+func (i Interpreter) visitVarStmt(stmt *Var) {
+	var value any = nil
 	if stmt.varValue != nil {
 		value = i.evaluate(stmt.varValue)
 	}
 	i.state.define(stmt.varName.Lexeme, value)
 }
 
-func (i Interpreter) visitBlockStmt(stmt Block) {
+func (i Interpreter) visitBlockStmt(stmt *Block) {
 	i.executeBlock(stmt, NewState(i.state))
 }
 
-func (i Interpreter) visitIfStmt(stmt If) {
+func (i Interpreter) visitIfStmt(stmt *If) {
 	if booleanCast(i.evaluate(stmt.condition)) {
 		i.execute(stmt.thenBranch)
 	} else if stmt.elseBranch != nil {
@@ -226,18 +235,19 @@ func (i Interpreter) visitIfStmt(stmt If) {
 	}
 }
 
-func (i Interpreter) visitWhileStmt(stmt While) {
+func (i Interpreter) visitWhileStmt(stmt *While) {
 	for booleanCast(i.evaluate(stmt.condition)) == true {
 		i.execute(stmt.body)
 	}
 }
 
-func (i Interpreter) visitFunctionStmt(stmt Function) {
-	fn := NewLoxFunction(stmt, *i.state, false)
+func (i Interpreter) visitFunctionStmt(stmt *Function) {
+	closure := i.state
+	fn := NewLoxFunction(stmt, closure, false)
 	i.state.define(stmt.name.Lexeme, fn)
 }
 
-func (i Interpreter) visitReturnStmt(stmt Return) {
+func (i Interpreter) visitReturnStmt(stmt *Return) {
 	var result any = nil
 	if stmt.value != nil {
 		result = i.evaluate(stmt.value)
@@ -248,13 +258,13 @@ func (i Interpreter) visitReturnStmt(stmt Return) {
 	panic(result)
 }
 
-func (i Interpreter) executeBlock(block Block, state *State) {
+func (i Interpreter) executeBlock(block *Block, state *State) {
 	prevState := i.state
 	i.state = state
+	defer func() { i.state = prevState }()
 	for _, stmt := range block.stmts {
 		i.execute(stmt)
 	}
-	i.state = prevState
 }
 
 func (i Interpreter) evaluate(expr Expr) any {
@@ -263,6 +273,21 @@ func (i Interpreter) evaluate(expr Expr) any {
 
 func (i Interpreter) execute(stmt Stmt) {
 	stmt.accept(i)
+}
+
+func (i Interpreter) resolve(expr Expr, depth int) {
+	i.locals[expr] = depth
+}
+
+func (i Interpreter) lookUpVariable(name Token, expr Expr) any {
+	distance, ok := i.locals[expr]
+	if ok {
+		// fmt.Printf("Lookup: %v at distance %v\n", name.Lexeme, distance)
+		return i.state.accessAt(distance, name.Lexeme)
+	} else {
+		// fmt.Printf("Lookup global: %v\n", name.Lexeme)
+		return i.globals.access(name.Lexeme)
+	}
 }
 
 func booleanCast(expr any) bool {

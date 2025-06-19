@@ -1,14 +1,14 @@
 package main
 
 type visitor[T string | any] interface {
-	visitUnaryExpr(UnaryExpr) T
-	visitBinaryExpr(BinaryExpr) T
-	visitGroupingExpr(GroupingExpr) T
-	visitLiteralExpr(LiteralExpr) T
-	visitVarExpr(VarExpr) T
-	visitAssignExpr(AssignExpr) T
-	visitLogicalExpr(LogicalExpr) T
-    visitCallExpr(CallExpr) T
+	visitUnaryExpr(*UnaryExpr) T
+	visitBinaryExpr(*BinaryExpr) T
+	visitGroupingExpr(*GroupingExpr) T
+	visitLiteralExpr(*LiteralExpr) T
+	visitVarExpr(*VarExpr) T
+	visitAssignExpr(*AssignExpr) T
+	visitLogicalExpr(*LogicalExpr) T
+	visitCallExpr(*CallExpr) T
 }
 
 type Expr interface {
@@ -29,11 +29,11 @@ func NewUnaryExpr(operator Token, right Expr) *UnaryExpr {
 }
 
 func (unary *UnaryExpr) print(v visitor[string]) string {
-	return v.visitUnaryExpr(*unary)
+	return v.visitUnaryExpr(unary)
 }
 
 func (unary *UnaryExpr) accept(v visitor[any]) any {
-	return v.visitUnaryExpr(*unary)
+	return v.visitUnaryExpr(unary)
 }
 
 type BinaryExpr struct {
@@ -51,11 +51,11 @@ func NewBinaryExpr(left Expr, operator Token, right Expr) *BinaryExpr {
 }
 
 func (binary *BinaryExpr) print(v visitor[string]) string {
-	return v.visitBinaryExpr(*binary)
+	return v.visitBinaryExpr(binary)
 }
 
 func (binary *BinaryExpr) accept(v visitor[any]) any {
-	return v.visitBinaryExpr(*binary)
+	return v.visitBinaryExpr(binary)
 }
 
 type GroupingExpr struct {
@@ -69,11 +69,11 @@ func NewGroupingExpr(expr Expr) *GroupingExpr {
 }
 
 func (grouping *GroupingExpr) print(v visitor[string]) string {
-	return v.visitGroupingExpr(*grouping)
+	return v.visitGroupingExpr(grouping)
 }
 
 func (grouping *GroupingExpr) accept(v visitor[any]) any {
-	return v.visitGroupingExpr(*grouping)
+	return v.visitGroupingExpr(grouping)
 }
 
 type LiteralExpr struct {
@@ -87,11 +87,11 @@ func NewLiteralExpr(value any) *LiteralExpr {
 }
 
 func (literal *LiteralExpr) print(v visitor[string]) string {
-	return v.visitLiteralExpr(*literal)
+	return v.visitLiteralExpr(literal)
 }
 
 func (literal *LiteralExpr) accept(v visitor[any]) any {
-	return v.visitLiteralExpr(*literal)
+	return v.visitLiteralExpr(literal)
 }
 
 type VarExpr struct {
@@ -105,11 +105,11 @@ func NewVarExpr(name Token) *VarExpr {
 }
 
 func (var_ *VarExpr) print(v visitor[string]) string {
-	return v.visitVarExpr(*var_)
+	return v.visitVarExpr(var_)
 }
 
 func (var_ *VarExpr) accept(v visitor[any]) any {
-	return v.visitVarExpr(*var_)
+	return v.visitVarExpr(var_)
 }
 
 type AssignExpr struct {
@@ -125,11 +125,11 @@ func NewAssignExpr(name Token, value Expr) *AssignExpr {
 }
 
 func (assign *AssignExpr) print(v visitor[string]) string {
-	return v.visitAssignExpr(*assign)
+	return v.visitAssignExpr(assign)
 }
 
 func (assign *AssignExpr) accept(v visitor[any]) any {
-	return v.visitAssignExpr(*assign)
+	return v.visitAssignExpr(assign)
 }
 
 type LogicalExpr struct {
@@ -147,11 +147,11 @@ func NewLogicalExpr(left Expr, operator Token, right Expr) *LogicalExpr {
 }
 
 func (logical *LogicalExpr) accept(v visitor[any]) any {
-	return v.visitLogicalExpr(*logical)
+	return v.visitLogicalExpr(logical)
 }
 
 func (logical *LogicalExpr) print(v visitor[string]) string {
-	return v.visitLogicalExpr(*logical)
+	return v.visitLogicalExpr(logical)
 }
 
 type CallExpr struct {
@@ -167,9 +167,9 @@ func NewCallExpr(callee Expr, args []Expr) *CallExpr {
 }
 
 func (call *CallExpr) accept(v visitor[any]) any {
-    return v.visitCallExpr(*call)
+	return v.visitCallExpr(call)
 }
 
 func (call *CallExpr) print(v visitor[string]) string {
-    return v.visitCallExpr(*call)
+	return v.visitCallExpr(call)
 }
