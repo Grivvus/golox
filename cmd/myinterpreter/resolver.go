@@ -5,15 +5,24 @@ import (
 	"os"
 )
 
+type functionType int
+
+const (
+	none functionType = iota
+	function
+)
+
 type Resolver struct {
-	interpreter *Interpreter
-	scopes      []map[string]bool
+	interpreter     *Interpreter
+	scopes          []map[string]bool
+	currentFunction functionType
 }
 
 func NewResolver(i *Interpreter) *Resolver {
 	r := new(Resolver)
 	r.interpreter = i
 	r.scopes = make([]map[string]bool, 0)
+	r.currentFunction = none
 	return r
 }
 
@@ -46,7 +55,10 @@ func (r Resolver) resolveExpr(expr Expr) {
 	expr.accept(r)
 }
 
-func (r *Resolver) resolveFunction(stmt *Function) {
+func (r *Resolver) resolveFunction(stmt *Function, type_ functionType) {
+	enclosingFunctionType := r.currentFunction
+	defer func() { r.currentFunction = enclosingFunctionType }()
+	r.currentFunction = type_
 	r.beginScope()
 	for _, param := range stmt.arguments {
 		r.declare(param)
@@ -98,7 +110,7 @@ func (r Resolver) visitVarStmt(stmt *Var) {
 func (r Resolver) visitFunctionStmt(stmt *Function) {
 	r.declare(stmt.name)
 	r.define(stmt.name)
-	r.resolveFunction(stmt)
+	r.resolveFunction(stmt, function)
 }
 
 func (r Resolver) visitExpressionStmt(stmt *Expression) {
@@ -118,6 +130,9 @@ func (r Resolver) visitPrintStmt(stmt *Print) {
 }
 
 func (r Resolver) visitReturnStmt(stmt *Return) {
+	if r.currentFunction == none {
+		r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return from top-level code", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
+	}
 	if stmt.value != nil {
 		r.resolveExpr(stmt.value)
 	}
