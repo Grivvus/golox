@@ -26,12 +26,10 @@ func (s *State) assign(name string, value any) {
 		s.enclosing.assign(name, value)
 		return
 	}
-	fmt.Fprintln(os.Stderr, "cannot assign unexisted variable")
-	os.Exit(70)
+	s.error("can't assign to variable that didnt exist")
 }
 
 func (s *State) define(name string, value any) {
-	// fmt.Printf("DEFINE: %s = %v in state %p\n", name, value, s)
 	s.values[name] = value
 }
 
@@ -41,8 +39,7 @@ func (s *State) access(name string) any {
 		if s.enclosing != nil {
 			return s.enclosing.access(name)
 		}
-		fmt.Fprintf(os.Stderr, "undefined variable '%v'", name)
-		os.Exit(70)
+		s.error(fmt.Sprintf("undefined variable '%v'", name))
 	}
 	return value
 }
@@ -55,7 +52,6 @@ func (s *State) ancestor(distance int) *State {
 		}
 		env = env.enclosing
 	}
-	// fmt.Printf("found ancestor with depth %v, addresss is %p\n", distance, env)
 	return env
 }
 
@@ -65,4 +61,9 @@ func (s *State) accessAt(distance int, name string) any {
 
 func (s *State) assignAt(distance int, name string, value any) {
 	s.ancestor(distance).assign(name, value)
+}
+
+func (s State) error(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
+	os.Exit(70)
 }

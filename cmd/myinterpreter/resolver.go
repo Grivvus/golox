@@ -65,8 +65,7 @@ func (r *Resolver) define(name Token) {
 func (r *Resolver) declare(name Token) {
 	if scope := r.currentScope(); scope != nil {
 		if _, found := scope[name.Lexeme]; found {
-			fmt.Fprintf(os.Stderr, "variable %v already exist in this scope, [line %v]", name.Lexeme, name.line)
-			os.Exit(70)
+			r.error(fmt.Sprintf("[line %v] Error at '%v': variable already exist in this scope", name.line, name.Lexeme))
 		}
 		scope[name.Lexeme] = false
 	}
@@ -83,15 +82,12 @@ func (r *Resolver) resolveLocal(expr Expr, name Token) {
 }
 
 func (r Resolver) visitBlockStmt(stmt *Block) {
-	// fmt.Println("Entering block scope")
 	r.beginScope()
 	r.resolveStmts(stmt.stmts)
 	r.endScope()
-	// fmt.Println("Exiting block scope")
 }
 
 func (r Resolver) visitVarStmt(stmt *Var) {
-	// fmt.Printf("Declaring variable: %s\n", stmt.varName.Lexeme)
 	r.declare(stmt.varName)
 	if stmt.varValue != nil {
 		r.resolveExpr(stmt.varValue)
@@ -133,10 +129,9 @@ func (r Resolver) visitWhileStmt(stmt *While) {
 }
 
 func (r Resolver) visitVarExpr(expr *VarExpr) any {
-	if len(r.scopes) == 0 {
-		defined, exist := r.currentScope()[expr.name.Lexeme]
-		if exist && !defined {
-			r.error(fmt.Sprintf("Can't read local variable %v from it's own initializer. line %v", expr.name.Lexeme, expr.name.line))
+	if scope := r.currentScope(); scope != nil {
+		if val, exists := scope[expr.name.Lexeme]; exists && !val {
+			r.error(fmt.Sprintf("[Line %d] Error at '%v': Can't read local variable in its own initializer", expr.name.line, expr.name.Lexeme))
 		}
 	}
 	r.resolveLocal(expr, expr.name)
@@ -188,5 +183,5 @@ func (r Resolver) visitUnaryExpr(expr *UnaryExpr) any {
 
 func (r Resolver) error(msg string) {
 	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(70)
+	os.Exit(65)
 }

@@ -52,8 +52,7 @@ func (i Interpreter) visitUnaryExpr(expr *UnaryExpr) any {
 		case float64:
 			return -(right.(float64))
 		default:
-			fmt.Fprintln(os.Stderr, "Operand must be a number")
-			os.Exit(70)
+			i.loxRuntimePanicBinNumeric()
 		}
 	}
 
@@ -69,12 +68,12 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) * right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case SLASH:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) / right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case PLUS:
 		left_type := reflect.TypeOf(left)
 		right_type := reflect.TypeOf(right)
@@ -83,33 +82,33 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 		} else if left_type.Kind() == reflect.Float64 && right_type.Kind() == reflect.Float64 {
 			return left.(float64) + right.(float64)
 		}
-		fmt.Fprintln(os.Stderr, "Operands must be two numbers or two strings")
+		i.error(fmt.Sprint(os.Stderr, "Operands must be two numbers or two strings"))
 		os.Exit(70)
 	case MINUS:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) - right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case GREATER:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) > right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case GREATER_EQUAL:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) >= right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case LESS:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) < right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case LESS_EQUAL:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) <= right.(float64)
 		}
-		loxRuntimePanicBinNumeric()
+		i.loxRuntimePanicBinNumeric()
 	case EQUAL_EQUAL:
 		left_type := reflect.TypeOf(left)
 		right_type := reflect.TypeOf(right)
@@ -165,8 +164,7 @@ func (i Interpreter) visitCallExpr(expr *CallExpr) any {
 	case LoxCallable:
 		goto FINE
 	default:
-		fmt.Fprintf(os.Stderr, "Can only call functions and classes.\n[line %v]", i.parser.getPrev().line)
-		os.Exit(70)
+		i.error(fmt.Sprintf("Can only call functions and classes.\n[line %v]", i.parser.getPrev().line))
 	}
 FINE:
 	arguments := make([]any, 0)
@@ -176,8 +174,7 @@ FINE:
 	var function LoxCallable
 	function = callee.(LoxCallable)
 	if function.arity() != len(arguments) {
-		fmt.Fprintf(os.Stderr, "expected %v arguments but got %v\n", function.arity(), len(arguments))
-		os.Exit(70)
+		i.error(fmt.Sprintf("expected %v arguments but got %v\n", function.arity(), len(arguments)))
 	}
 	return function.call(i, arguments)
 }
@@ -282,10 +279,8 @@ func (i Interpreter) resolve(expr Expr, depth int) {
 func (i Interpreter) lookUpVariable(name Token, expr Expr) any {
 	distance, ok := i.locals[expr]
 	if ok {
-		// fmt.Printf("Lookup: %v at distance %v\n", name.Lexeme, distance)
 		return i.state.accessAt(distance, name.Lexeme)
 	} else {
-		// fmt.Printf("Lookup global: %v\n", name.Lexeme)
 		return i.globals.access(name.Lexeme)
 	}
 }
@@ -302,7 +297,12 @@ func booleanCast(expr any) bool {
 	}
 }
 
-func loxRuntimePanicBinNumeric() {
+func (i Interpreter) loxRuntimePanicBinNumeric() {
 	fmt.Fprintln(os.Stderr, "Operands must be a numbers")
+	os.Exit(70)
+}
+
+func (i Interpreter) error(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(70)
 }
