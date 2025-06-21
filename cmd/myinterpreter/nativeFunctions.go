@@ -7,7 +7,7 @@ import (
 type loxTime struct{}
 
 func newLoxTime() *loxTime {
-    return new(loxTime)
+	return new(loxTime)
 }
 
 func (t loxTime) call(i Interpreter, args []any) any {
@@ -19,5 +19,5 @@ func (t loxTime) arity() int {
 }
 
 func (t loxTime) String() string {
-    return "<native fn>";
+	return "<native fn>"
 }
