@@ -107,6 +107,11 @@ func (r Resolver) visitVarStmt(stmt *Var) {
 	r.define(stmt.varName)
 }
 
+func (r Resolver) visitClassStmt(stmt *Class) {
+	r.declare(stmt.name)
+	r.define(stmt.name)
+}
+
 func (r Resolver) visitFunctionStmt(stmt *Function) {
 	r.declare(stmt.name)
 	r.define(stmt.name)

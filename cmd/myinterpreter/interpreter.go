@@ -23,12 +23,6 @@ func NewInterpreter(parser *Parser) *Interpreter {
 	return i
 }
 
-func (i Interpreter) interpret(statements []Stmt) {
-	for _, stmt := range statements {
-		i.execute(stmt)
-	}
-}
-
 func (i Interpreter) visitVarExpr(expr *VarExpr) any {
 	return i.lookUpVariable(expr.name, expr)
 }
@@ -139,10 +133,6 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 	return nil
 }
 
-func (i Interpreter) visitDefinedVar(expr *VarExpr) any {
-	return i.state.access(expr.name.Lexeme)
-}
-
 func (i Interpreter) visitLogicalExpr(expr *LogicalExpr) any {
 	left := i.evaluate(expr.left)
 	if expr.operator.Token == OR {
@@ -236,6 +226,12 @@ func (i Interpreter) visitWhileStmt(stmt *While) {
 	for booleanCast(i.evaluate(stmt.condition)) == true {
 		i.execute(stmt.body)
 	}
+}
+
+func (i Interpreter) visitClassStmt(stmt *Class) {
+	i.state.define(stmt.name.Lexeme, nil)
+	cls := NewLoxClass(stmt.name.Lexeme)
+	i.state.assign(stmt.name.Lexeme, cls)
 }
 
 func (i Interpreter) visitFunctionStmt(stmt *Function) {

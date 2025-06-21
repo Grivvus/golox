@@ -7,6 +7,7 @@ type stmtVisitor interface {
 	visitBlockStmt(stmt *Block)
 	visitIfStmt(stmt *If)
 	visitWhileStmt(stmt *While)
+	visitClassStmt(stmt *Class)
 	visitFunctionStmt(stmt *Function)
 	visitReturnStmt(stmt *Return)
 }
@@ -139,4 +140,20 @@ func NewReturn(retKeyWord Token, value Expr) *Return {
 
 func (ret *Return) accept(vis stmtVisitor) {
 	vis.visitReturnStmt(ret)
+}
+
+type Class struct {
+	name    Token
+	methods []*Function
+}
+
+func NewClass(name Token, methods []*Function) *Class {
+	return &Class{
+		name:    name,
+		methods: methods,
+	}
+}
+
+func (cls *Class) accept(vis stmtVisitor) {
+	vis.visitClassStmt(cls)
 }

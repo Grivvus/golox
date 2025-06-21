@@ -1,5 +1,2 @@
-var a = "outer";
-{
-  var a = a;    // Error: Can't read local variable in its own initializer
-  print a;
-}
+class Bagel {}
+print Bagel; // Prints "Bagel instance".
