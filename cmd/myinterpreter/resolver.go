@@ -8,8 +8,9 @@ import (
 type functionType int
 
 const (
-	none functionType = iota
-	function
+	NONE functionType = iota
+	FUNCTION
+	METHOD
 )
 
 type Resolver struct {
@@ -22,7 +23,7 @@ func NewResolver(i *Interpreter) *Resolver {
 	r := new(Resolver)
 	r.interpreter = i
 	r.scopes = make([]map[string]bool, 0)
-	r.currentFunction = none
+	r.currentFunction = NONE
 	return r
 }
 
@@ -109,13 +110,18 @@ func (r Resolver) visitVarStmt(stmt *Var) {
 
 func (r Resolver) visitClassStmt(stmt *Class) {
 	r.declare(stmt.name)
+
+	for _, method := range stmt.methods {
+		r.resolveFunction(method, METHOD)
+	}
+
 	r.define(stmt.name)
 }
 
 func (r Resolver) visitFunctionStmt(stmt *Function) {
 	r.declare(stmt.name)
 	r.define(stmt.name)
-	r.resolveFunction(stmt, function)
+	r.resolveFunction(stmt, FUNCTION)
 }
 
 func (r Resolver) visitExpressionStmt(stmt *Expression) {
@@ -135,7 +141,7 @@ func (r Resolver) visitPrintStmt(stmt *Print) {
 }
 
 func (r Resolver) visitReturnStmt(stmt *Return) {
-	if r.currentFunction == none {
+	if r.currentFunction == NONE {
 		r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return from top-level code", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
 	}
 	if stmt.value != nil {

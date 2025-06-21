@@ -1,12 +1,14 @@
 package main
 
 type LoxClass struct {
-	name string
+	name    string
+	methods map[string]*LoxFunction
 }
 
-func NewLoxClass(name string) *LoxClass {
+func NewLoxClass(name string, methods map[string]*LoxFunction) *LoxClass {
 	return &LoxClass{
-		name: name,
+		name:    name,
+		methods: methods,
 	}
 }
 

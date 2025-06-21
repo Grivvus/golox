@@ -1,9 +1,7 @@
-class Spaceship {}
-var falcon = Spaceship();
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
 
-falcon.name = "Millennium Falcon";
-falcon.speed = 75.5;
-
-print "Ship details:";
-print falcon.name;
-print falcon.speed;
+Bacon().eat();

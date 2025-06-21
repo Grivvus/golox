@@ -23,11 +23,16 @@ func (instance *LoxInstance) String() string {
 
 func (instance *LoxInstance) Get(name Token) any {
 	value, ok := instance.fields[name.Lexeme]
-	if !ok {
-		fmt.Fprintf(os.Stderr, "[line %v] Undefined property '%v'", name.line, name.Lexeme)
-		os.Exit(70)
+	if ok {
+		return value
 	}
-	return value
+	method, ok := instance.cls.methods[name.Lexeme]
+	if ok {
+		return method
+	}
+	fmt.Fprintf(os.Stderr, "[line %v] Undefined property '%v'", name.line, name.Lexeme)
+	os.Exit(70)
+	return nil
 }
 
 func (instance *LoxInstance) Set(name Token, value any) {

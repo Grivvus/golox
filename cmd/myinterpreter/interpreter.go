@@ -254,7 +254,12 @@ func (i Interpreter) visitWhileStmt(stmt *While) {
 
 func (i Interpreter) visitClassStmt(stmt *Class) {
 	i.state.define(stmt.name.Lexeme, nil)
-	cls := NewLoxClass(stmt.name.Lexeme)
+	methods := make(map[string]*LoxFunction, 0)
+	for _, method := range stmt.methods {
+		function := NewLoxFunction(method, i.state, false)
+		methods[method.name.Lexeme] = function
+	}
+	cls := NewLoxClass(stmt.name.Lexeme, methods)
 	i.state.assign(stmt.name.Lexeme, cls)
 }
 
