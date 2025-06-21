@@ -21,6 +21,10 @@ func (ft _functionType) Method() int {
 	return 2
 }
 
+func (ft _functionType) Initializer() int {
+	return 4
+}
+
 type _classType struct{}
 
 var ClassType = _classType{}
@@ -140,7 +144,11 @@ func (r Resolver) visitClassStmt(stmt *Class) {
 	r.currentScope()["this"] = true
 
 	for _, method := range stmt.methods {
-		r.resolveFunction(method, FunctionType.Method())
+		if method.name.Lexeme == "init" {
+			r.resolveFunction(method, FunctionType.Initializer())
+		} else {
+			r.resolveFunction(method, FunctionType.Method())
+		}
 	}
 
 	r.endScope()
@@ -175,6 +183,9 @@ func (r Resolver) visitReturnStmt(stmt *Return) {
 		r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return from top-level code", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
 	}
 	if stmt.value != nil {
+		if r.currentFunction == FunctionType.Initializer() {
+			r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return a value from initializer", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
+		}
 		r.resolveExpr(stmt.value)
 	}
 }

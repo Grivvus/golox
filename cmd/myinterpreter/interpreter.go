@@ -260,7 +260,7 @@ func (i Interpreter) visitClassStmt(stmt *Class) {
 	i.state.define(stmt.name.Lexeme, nil)
 	methods := make(map[string]*LoxFunction, 0)
 	for _, method := range stmt.methods {
-		function := NewLoxFunction(method, i.state, false)
+		function := NewLoxFunction(method, i.state, method.name.Lexeme == "init")
 		methods[method.name.Lexeme] = function
 	}
 	cls := NewLoxClass(stmt.name.Lexeme, methods)

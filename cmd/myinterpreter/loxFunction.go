@@ -25,7 +25,9 @@ func (lf *LoxFunction) arity() int {
 func (lf *LoxFunction) call(i Interpreter, args []any) (retVal any) {
 	defer func() {
 		if err := recover(); err != nil {
-			if retVal != "nil" {
+			if lf.isInitialiser {
+				retVal = lf.closure.accessAt(0, "this")
+			} else if retVal != "nil" {
 				retVal = err
 			} else {
 				retVal = nil
@@ -38,6 +40,11 @@ func (lf *LoxFunction) call(i Interpreter, args []any) (retVal any) {
 		funState.define(lf.declaration.arguments[i].Lexeme, arg)
 	}
 	i.executeBlock(lf.declaration.body, funState)
+
+	if lf.isInitialiser {
+		return lf.closure.accessAt(0, "this")
+	}
+
 	return nil
 }
 
