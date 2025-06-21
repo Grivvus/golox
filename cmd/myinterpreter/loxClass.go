@@ -23,8 +23,8 @@ func (cls *LoxClass) arity() int {
 
 func (cls *LoxClass) call(i Interpreter, args []any) any {
 	instance := NewLoxInstance(cls)
-	initializer, exist := cls.methods["init"]
-	if exist {
+	initializer := cls.findMethod("init")
+	if initializer != nil {
 		initializer.bind(instance).call(i, args)
 	}
 	return instance
