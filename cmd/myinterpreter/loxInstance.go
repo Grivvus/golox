@@ -30,7 +30,7 @@ func (instance *LoxInstance) Get(name Token) any {
 	if method != nil {
 		return method.bind(instance)
 	}
-	fmt.Fprintf(os.Stderr, "[line %v] Undefined property '%v'", name.line, name.Lexeme)
+	fmt.Fprintf(os.Stderr, "[line %v] Undefined property '%v'", name.Line, name.Lexeme)
 	os.Exit(70)
 	return nil
 }

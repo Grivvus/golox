@@ -16,7 +16,7 @@ type Interpreter struct {
 func NewInterpreter(parser *Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
-	i.state.define("clock", newLoxTime())
+	i.state.define("clock", NewLoxTime())
 	i.globals = i.state
 	i.locals = make(map[Expr]int, 0)
 	i.parser = parser
@@ -76,8 +76,7 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 		} else if left_type.Kind() == reflect.Float64 && right_type.Kind() == reflect.Float64 {
 			return left.(float64) + right.(float64)
 		}
-		i.error(fmt.Sprint(os.Stderr, "Operands must be two numbers or two strings"))
-		os.Exit(70)
+		i.error(expr.operator, "Operands must be two numbers or two strings")
 	case MINUS:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) - right.(float64)
@@ -154,7 +153,7 @@ func (i Interpreter) visitCallExpr(expr *CallExpr) any {
 	case LoxCallable:
 		goto FINE
 	default:
-		i.error(fmt.Sprintf("Can only call functions and classes.\n[line %v]", i.parser.getPrev().line))
+		i.error(expr.caleeToken, "Can only call functions and classes")
 	}
 FINE:
 	arguments := make([]any, 0)
@@ -164,7 +163,7 @@ FINE:
 	var function LoxCallable
 	function = callee.(LoxCallable)
 	if function.arity() != len(arguments) {
-		i.error(fmt.Sprintf("expected %v arguments but got %v\n", function.arity(), len(arguments)))
+		i.error(expr.caleeToken, fmt.Sprintf("expected %v arguments but got %v\n", function.arity(), len(arguments)))
 	}
 	return function.call(i, arguments)
 }
@@ -175,7 +174,7 @@ func (i Interpreter) visitGetExpr(expr *GetExpr) any {
 	case *LoxInstance:
 		return object.(*LoxInstance).Get(expr.name)
 	default:
-		i.error("Only instance have properties")
+		i.error(expr.name, "Only instance have properties")
 	}
 	return nil
 }
@@ -188,7 +187,7 @@ func (i Interpreter) visitSetExpr(expr *SetExpr) any {
 		exprRes = i.evaluate(expr.value)
 		object.(*LoxInstance).Set(expr.name, exprRes)
 	default:
-		i.error("Only instance have fields")
+		i.error(expr.name, "Only instance have fields")
 	}
 	return exprRes
 }
@@ -199,7 +198,7 @@ func (i Interpreter) visitSuperExpr(expr *SuperExpr) any {
 	instance := i.state.accessAt(distance-1, "this").(*LoxInstance)
 	method := superclass.findMethod(expr.method.Lexeme)
 	if method == nil {
-		i.error(fmt.Sprintf("[line %v] Undefined property '%v'", expr.method.line, expr.method.Lexeme))
+		i.error(expr.keyword, fmt.Sprintf("Undefined property %v'", expr.method.Lexeme))
 	}
 	return method.bind(instance)
 }
@@ -272,7 +271,7 @@ func (i Interpreter) visitClassStmt(stmt *Class) {
 	if stmt.superclass != nil {
 		superclassEval := i.evaluate(stmt.superclass)
 		if _, ok := superclassEval.(*LoxClass); !ok {
-			i.error("Can't inherit not from class")
+			i.error(stmt.name, "Can't inherit not from class")
 		}
 		superclass = superclassEval.(*LoxClass)
 	}
@@ -359,7 +358,7 @@ func (i Interpreter) loxRuntimePanicBinNumeric() {
 	os.Exit(70)
 }
 
-func (i Interpreter) error(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
+func (i Interpreter) error(token Token, msg string) {
+	fmt.Fprint(os.Stderr, "[line %v] %v.\n", token.Line, msg)
 	os.Exit(70)
 }

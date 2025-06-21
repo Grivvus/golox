@@ -159,13 +159,15 @@ func (logical *LogicalExpr) print(v visitor[string]) string {
 }
 
 type CallExpr struct {
-	callee Expr
-	args   []Expr
+	caleeToken Token
+	callee     Expr
+	args       []Expr
 }
 
-func NewCallExpr(callee Expr, args []Expr) *CallExpr {
+func NewCallExpr(caleeToken Token, callee Expr, args []Expr) *CallExpr {
 	c := new(CallExpr)
 	c.args = args
+	c.caleeToken = caleeToken
 	c.callee = callee
 	return c
 }

@@ -108,7 +108,7 @@ func (r *Resolver) define(name Token) {
 func (r *Resolver) declare(name Token) {
 	if scope := r.currentScope(); scope != nil {
 		if _, found := scope[name.Lexeme]; found {
-			r.error(fmt.Sprintf("[line %v] Error at '%v': variable already exist in this scope", name.line, name.Lexeme))
+			r.error(fmt.Sprintf("[line %v] Error at '%v': variable already exist in this scope", name.Line, name.Lexeme))
 		}
 		scope[name.Lexeme] = false
 	}
@@ -195,11 +195,11 @@ func (r Resolver) visitPrintStmt(stmt *Print) {
 
 func (r Resolver) visitReturnStmt(stmt *Return) {
 	if r.currentFunction == FunctionType.None() {
-		r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return from top-level code", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
+		r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return from top-level code", stmt.retKeyWord.Line, stmt.retKeyWord.Lexeme))
 	}
 	if stmt.value != nil {
 		if r.currentFunction == FunctionType.Initializer() {
-			r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return a value from initializer", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
+			r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return a value from initializer", stmt.retKeyWord.Line, stmt.retKeyWord.Lexeme))
 		}
 		r.resolveExpr(stmt.value)
 	}
@@ -213,7 +213,7 @@ func (r Resolver) visitWhileStmt(stmt *While) {
 func (r Resolver) visitVarExpr(expr *VarExpr) any {
 	if scope := r.currentScope(); scope != nil {
 		if val, exists := scope[expr.name.Lexeme]; exists && !val {
-			r.error(fmt.Sprintf("[Line %d] Error at '%v': Can't read local variable in its own initializer", expr.name.line, expr.name.Lexeme))
+			r.error(fmt.Sprintf("[Line %d] Error at '%v': Can't read local variable in its own initializer", expr.name.Line, expr.name.Lexeme))
 		}
 	}
 	r.resolveLocal(expr, expr.name)
@@ -256,10 +256,10 @@ func (r Resolver) visitSetExpr(expr *SetExpr) any {
 
 func (r Resolver) visitSuperExpr(expr *SuperExpr) any {
 	if r.currentClass == ClassType.None() {
-		r.error(fmt.Sprintf("[line %v] Can't use 'super' outside of class", expr.method.line))
+		r.error(fmt.Sprintf("[line %v] Can't use 'super' outside of class", expr.method.Line))
 	}
 	if r.currentClass != ClassType.Subclass() {
-		r.error(fmt.Sprintf("[line %v] Can't use 'super' in a class with no superclass", expr.method.line))
+		r.error(fmt.Sprintf("[line %v] Can't use 'super' in a class with no superclass", expr.method.Line))
 	}
 	r.resolveLocal(expr, expr.keyword)
 	return nil
@@ -267,7 +267,7 @@ func (r Resolver) visitSuperExpr(expr *SuperExpr) any {
 
 func (r Resolver) visitThisExpr(expr *ThisExpr) any {
 	if r.currentClass == ClassType.None() {
-		r.error(fmt.Sprintf("[line %v] Can't use 'this' outside of a class", expr.keyword.line))
+		r.error(fmt.Sprintf("[line %v] Can't use 'this' outside of a class", expr.keyword.Line))
 	}
 	r.resolveLocal(expr, expr.keyword)
 	return nil

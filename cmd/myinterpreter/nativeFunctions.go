@@ -4,20 +4,20 @@ import (
 	"time"
 )
 
-type loxTime struct{}
+type LoxTime struct{}
 
-func newLoxTime() *loxTime {
-	return new(loxTime)
+func NewLoxTime() *LoxTime {
+	return new(LoxTime)
 }
 
-func (t loxTime) call(i Interpreter, args []any) any {
+func (t LoxTime) call(i Interpreter, args []any) any {
 	return float64(time.Now().Unix())
 }
 
-func (t loxTime) arity() int {
+func (t LoxTime) arity() int {
 	return 0
 }
 
-func (t loxTime) String() string {
+func (t LoxTime) String() string {
 	return "<native fn>"
 }

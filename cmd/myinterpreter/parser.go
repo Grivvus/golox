@@ -378,7 +378,7 @@ func (p *Parser) finishCall(callee Expr) Expr {
 		p.error("expected ')' after arguments")
 	}
 	p.currentIndex++
-	return NewCallExpr(callee, arguments)
+	return NewCallExpr(p.getPrev(), callee, arguments)
 }
 
 func (p *Parser) call() Expr {
@@ -520,6 +520,6 @@ func (p *Parser) nextExpr() Expr {
 }
 
 func (p *Parser) error(msg string) {
-	fmt.Fprintf(os.Stderr, "[line %v] error at %v: %v\n", p.getCurrent().line, p.getCurrent().Lexeme, msg)
+	fmt.Fprintf(os.Stderr, "[line %v] error at %v: %v\n", p.getCurrent().Line, p.getCurrent().Lexeme, msg)
 	os.Exit(65)
 }

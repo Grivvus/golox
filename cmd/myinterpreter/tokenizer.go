@@ -85,7 +85,7 @@ type Token struct {
 	Lexeme  string
 	Token   TokenType
 	Literal any
-	line    uint
+	Line    uint
 }
 
 func NewToken(lexeme string, token TokenType, literal any, line uint) *Token {
@@ -93,7 +93,7 @@ func NewToken(lexeme string, token TokenType, literal any, line uint) *Token {
 	t.Lexeme = lexeme
 	t.Token = token
 	t.Literal = literal
-	t.line = line
+	t.Line = line
 
 	return t
 }
