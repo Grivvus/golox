@@ -1,33 +1,22 @@
-class Root {
-  getName() {
-    print "Root class";
+class Base {
+  method() {
+    print "Base.method()";
   }
 }
 
-class Parent < Root {
-  parentMethod() {
-    print "Method defined in Parent";
+class Parent < Base {
+  method() {
+    super.method();
   }
 }
 
 class Child < Parent {
-  childMethod() {
-    print "Method defined in Child";
+  method() {
+    super.method();
   }
 }
 
-var root = Root();
 var parent = Parent();
+parent.method();
 var child = Child();
-
-// Root methods are available to all
-root.getName();
-parent.getName();
-child.getName();
-
-// Parent methods are available to Parent and Child
-parent.parentMethod();
-child.parentMethod();
-
-// Child methods are only available to Child
-child.childMethod();
+child.method();

@@ -12,6 +12,7 @@ type visitor[T string | any] interface {
 	visitGetExpr(*GetExpr) T
 	visitSetExpr(*SetExpr) T
 	visitThisExpr(*ThisExpr) T
+	visitSuperExpr(*SuperExpr) T
 }
 
 type Expr interface {
@@ -235,4 +236,24 @@ func (this *ThisExpr) accept(v visitor[any]) any {
 
 func (this *ThisExpr) print(v visitor[string]) string {
 	return v.visitThisExpr(this)
+}
+
+type SuperExpr struct {
+	keyword Token
+	method  Token
+}
+
+func NewSuperExpr(keyword, method Token) *SuperExpr {
+	return &SuperExpr{
+		keyword: keyword,
+		method:  method,
+	}
+}
+
+func (super *SuperExpr) accept(v visitor[any]) any {
+	return v.visitSuperExpr(super)
+}
+
+func (super *SuperExpr) print(v visitor[string]) string {
+	return v.visitSuperExpr(super)
 }

@@ -193,6 +193,17 @@ func (i Interpreter) visitSetExpr(expr *SetExpr) any {
 	return exprRes
 }
 
+func (i Interpreter) visitSuperExpr(expr *SuperExpr) any {
+	distance := i.locals[expr]
+	superclass := i.state.accessAt(distance, "super").(*LoxClass)
+	instance := i.state.accessAt(distance-1, "this").(*LoxInstance)
+	method := superclass.findMethod(expr.method.Lexeme)
+	if method == nil {
+		i.error(fmt.Sprintf("[line %v] Undefined property '%v'", expr.method.line, expr.method.Lexeme))
+	}
+	return method.bind(instance)
+}
+
 func (i Interpreter) visitThisExpr(expr *ThisExpr) any {
 	return i.lookUpVariable(expr.keyword, expr)
 }
@@ -266,12 +277,21 @@ func (i Interpreter) visitClassStmt(stmt *Class) {
 		superclass = superclassEval.(*LoxClass)
 	}
 	i.state.define(stmt.name.Lexeme, nil)
+
+	if stmt.superclass != nil {
+		i.state = NewState(i.state)
+		i.state.define("super", superclass)
+	}
+
 	methods := make(map[string]*LoxFunction, 0)
 	for _, method := range stmt.methods {
 		function := NewLoxFunction(method, i.state, method.name.Lexeme == "init")
 		methods[method.name.Lexeme] = function
 	}
 	cls := NewLoxClass(stmt.name.Lexeme, superclass, methods)
+	if superclass != nil {
+		i.state = i.state.enclosing
+	}
 	i.state.assign(stmt.name.Lexeme, cls)
 }
 

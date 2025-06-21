@@ -325,6 +325,16 @@ func (p *Parser) literalExpr() Expr {
 		return NewLiteralExpr(nil)
 	} else if p.match(STRING, NUMBER) {
 		return NewLiteralExpr(p.getPrev().Literal)
+	} else if p.match(SUPER) {
+		token := p.getPrev()
+		if !p.match(DOT) {
+			p.error("Expect '.' after 'super'.")
+		}
+		method := p.incrIndex()
+		if method.Token != IDENTIFIER {
+			p.error("Expect method name after 'super'")
+		}
+		return NewSuperExpr(token, method)
 	} else if p.match(THIS) {
 		return NewThisExpr(p.getPrev())
 	} else if p.match(IDENTIFIER) {

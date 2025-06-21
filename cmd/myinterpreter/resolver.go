@@ -37,6 +37,10 @@ func (ct _classType) Class() int {
 	return 1
 }
 
+func (ct _classType) Subclass() int {
+	return 2
+}
+
 type Resolver struct {
 	interpreter     *Interpreter
 	scopes          []map[string]bool
@@ -141,10 +145,14 @@ func (r Resolver) visitClassStmt(stmt *Class) {
 	r.define(stmt.name)
 
 	if stmt.superclass != nil {
+		r.currentClass = ClassType.Subclass()
 		if stmt.superclass.name.Lexeme == stmt.name.Lexeme {
 			r.error("Can't inherit from itself")
 		}
 		r.resolveExpr(stmt.superclass)
+		r.beginScope()
+		defer func() { r.endScope() }()
+		r.currentScope()["super"] = true
 	}
 
 	r.beginScope()
@@ -243,6 +251,17 @@ func (r Resolver) visitGetExpr(expr *GetExpr) any {
 func (r Resolver) visitSetExpr(expr *SetExpr) any {
 	r.resolveExpr(expr.value)
 	r.resolveExpr(expr.object)
+	return nil
+}
+
+func (r Resolver) visitSuperExpr(expr *SuperExpr) any {
+	if r.currentClass == ClassType.None() {
+		r.error(fmt.Sprintf("[line %v] Can't use 'super' outside of class", expr.method.line))
+	}
+	if r.currentClass != ClassType.Subclass() {
+		r.error(fmt.Sprintf("[line %v] Can't use 'super' in a class with no superclass", expr.method.line))
+	}
+	r.resolveLocal(expr, expr.keyword)
 	return nil
 }
 

@@ -77,5 +77,9 @@ func (printer astPrinter) visitSetExpr(expr *SetExpr) string {
 }
 
 func (printer astPrinter) visitThisExpr(expr *ThisExpr) string {
-	return "this"
+	return "this\n"
+}
+
+func (printer astPrinter) visitSuperExpr(expr *SuperExpr) string {
+	return "super\n"
 }
