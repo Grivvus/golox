@@ -143,14 +143,16 @@ func (ret *Return) accept(vis stmtVisitor) {
 }
 
 type Class struct {
-	name    Token
-	methods []*Function
+	name       Token
+	superclass *VarExpr
+	methods    []*Function
 }
 
-func NewClass(name Token, methods []*Function) *Class {
+func NewClass(name Token, superclass *VarExpr, methods []*Function) *Class {
 	return &Class{
-		name:    name,
-		methods: methods,
+		name:       name,
+		superclass: superclass,
+		methods:    methods,
 	}
 }
 

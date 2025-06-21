@@ -140,6 +140,13 @@ func (r Resolver) visitClassStmt(stmt *Class) {
 	r.declare(stmt.name)
 	r.define(stmt.name)
 
+	if stmt.superclass != nil {
+		if stmt.superclass.name.Lexeme == stmt.name.Lexeme {
+			r.error("Can't inherit from itself")
+		}
+		r.resolveExpr(stmt.superclass)
+	}
+
 	r.beginScope()
 	r.currentScope()["this"] = true
 

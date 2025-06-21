@@ -257,13 +257,21 @@ func (i Interpreter) visitWhileStmt(stmt *While) {
 }
 
 func (i Interpreter) visitClassStmt(stmt *Class) {
+	var superclass *LoxClass = nil
+	if stmt.superclass != nil {
+		superclassEval := i.evaluate(stmt.superclass)
+		if _, ok := superclassEval.(*LoxClass); !ok {
+			i.error("Can't inherit not from class")
+		}
+		superclass = superclassEval.(*LoxClass)
+	}
 	i.state.define(stmt.name.Lexeme, nil)
 	methods := make(map[string]*LoxFunction, 0)
 	for _, method := range stmt.methods {
 		function := NewLoxFunction(method, i.state, method.name.Lexeme == "init")
 		methods[method.name.Lexeme] = function
 	}
-	cls := NewLoxClass(stmt.name.Lexeme, methods)
+	cls := NewLoxClass(stmt.name.Lexeme, superclass, methods)
 	i.state.assign(stmt.name.Lexeme, cls)
 }
 

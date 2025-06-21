@@ -26,8 +26,8 @@ func (instance *LoxInstance) Get(name Token) any {
 	if ok {
 		return value
 	}
-	method, ok := instance.cls.methods[name.Lexeme]
-	if ok {
+	method := instance.cls.findMethod(name.Lexeme)
+	if method != nil {
 		return method.bind(instance)
 	}
 	fmt.Fprintf(os.Stderr, "[line %v] Undefined property '%v'", name.line, name.Lexeme)

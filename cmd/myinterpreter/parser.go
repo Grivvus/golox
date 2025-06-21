@@ -85,9 +85,16 @@ func (p *Parser) blockStatement() Stmt {
 
 func (p *Parser) classDeclaration() Stmt {
 	name := p.getCurrent()
+	var superclass *VarExpr = nil
 	p.incrIndex()
 	if name.Token != IDENTIFIER {
 		p.error("Expect class name.")
+	}
+	if p.match(LESS) {
+		if !p.match(IDENTIFIER) {
+			p.error("Expect superclass name.")
+		}
+		superclass = NewVarExpr(p.getPrev())
 	}
 	if !p.match(LEFT_BRACE) {
 		p.error("Expect '{' before class body.")
@@ -104,7 +111,7 @@ func (p *Parser) classDeclaration() Stmt {
 		p.error("Expected '}' after class body.")
 	}
 
-	return NewClass(name, methods)
+	return NewClass(name, superclass, methods)
 }
 
 func (p *Parser) funStatement(kind string) Stmt {
