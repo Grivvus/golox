@@ -343,7 +343,7 @@ func (p *Parser) group() Expr {
 }
 
 func (p *Parser) finishCall(callee Expr) Expr {
-	arguments := make([]Expr, 0, 0)
+	arguments := make([]Expr, 0)
 	if !p.check(RIGHT_PAREN) {
 		arguments = append(arguments, p.nextExpr())
 		for p.match(COMMA) {
@@ -367,6 +367,13 @@ func (p *Parser) call() Expr {
 	for true {
 		if p.match(LEFT_PAREN) {
 			expr = p.finishCall(expr)
+		} else if p.match(DOT) {
+			name := p.getCurrent()
+			p.currentIndex++
+			if name.Token != IDENTIFIER {
+				p.error("Expect property name after '.'")
+			}
+			expr = NewGetExpr(expr, name)
 		} else {
 			break
 		}
@@ -479,6 +486,9 @@ func (p *Parser) assignment() Expr {
 		case *VarExpr:
 			name := expr.(*VarExpr).name
 			return NewAssignExpr(name, value)
+		case *GetExpr:
+			get := expr.(*GetExpr)
+			return NewSetExpr(get.object, get.name, value)
 		default:
 			p.error("Invalid assignment target")
 		}

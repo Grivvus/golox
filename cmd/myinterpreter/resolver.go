@@ -181,6 +181,17 @@ func (r Resolver) visitCallExpr(expr *CallExpr) any {
 	return nil
 }
 
+func (r Resolver) visitGetExpr(expr *GetExpr) any {
+	r.resolveExpr(expr.object)
+	return nil
+}
+
+func (r Resolver) visitSetExpr(expr *SetExpr) any {
+	r.resolveExpr(expr.value)
+	r.resolveExpr(expr.object)
+	return nil
+}
+
 func (r Resolver) visitGroupingExpr(expr *GroupingExpr) any {
 	r.resolveExpr(expr.expr)
 	return nil

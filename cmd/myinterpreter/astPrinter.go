@@ -5,8 +5,7 @@ import (
 	"strings"
 )
 
-type astPrinter struct {
-}
+type astPrinter struct{}
 
 func NewPrinter() *astPrinter {
 	return new(astPrinter)
@@ -67,4 +66,12 @@ func (printer astPrinter) visitLogicalExpr(expr *LogicalExpr) string {
 
 func (printer astPrinter) visitCallExpr(expr *CallExpr) string {
 	return "callable"
+}
+
+func (printer astPrinter) visitGetExpr(expr *GetExpr) string {
+	return fmt.Sprintf("get on %v\n", expr.object.print(printer))
+}
+
+func (printer astPrinter) visitSetExpr(expr *SetExpr) string {
+	return fmt.Sprintf("set on %v, value=%v\n", expr.object.print(printer), expr.value.print(printer))
 }

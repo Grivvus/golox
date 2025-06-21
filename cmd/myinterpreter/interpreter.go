@@ -169,6 +169,30 @@ FINE:
 	return function.call(i, arguments)
 }
 
+func (i Interpreter) visitGetExpr(expr *GetExpr) any {
+	object := i.evaluate(expr.object)
+	switch object.(type) {
+	case *LoxInstance:
+		return object.(*LoxInstance).Get(expr.name)
+	default:
+		i.error("Only instance have properties")
+	}
+	return nil
+}
+
+func (i Interpreter) visitSetExpr(expr *SetExpr) any {
+	object := i.evaluate(expr.object)
+	var exprRes any
+	switch object.(type) {
+	case *LoxInstance:
+		exprRes = i.evaluate(expr.value)
+		object.(*LoxInstance).Set(expr.name, exprRes)
+	default:
+		i.error("Only instance have fields")
+	}
+	return exprRes
+}
+
 func (i Interpreter) visitAssignExpr(expr *AssignExpr) any {
 	value := i.evaluate(expr.value)
 	distance, ok := i.locals[expr]

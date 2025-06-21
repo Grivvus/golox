@@ -9,6 +9,8 @@ type visitor[T string | any] interface {
 	visitAssignExpr(*AssignExpr) T
 	visitLogicalExpr(*LogicalExpr) T
 	visitCallExpr(*CallExpr) T
+	visitGetExpr(*GetExpr) T
+	visitSetExpr(*SetExpr) T
 }
 
 type Expr interface {
@@ -172,4 +174,46 @@ func (call *CallExpr) accept(v visitor[any]) any {
 
 func (call *CallExpr) print(v visitor[string]) string {
 	return v.visitCallExpr(call)
+}
+
+type GetExpr struct {
+	object Expr
+	name   Token
+}
+
+func NewGetExpr(object Expr, name Token) *GetExpr {
+	return &GetExpr{
+		object: object,
+		name:   name,
+	}
+}
+
+func (get *GetExpr) accept(v visitor[any]) any {
+	return v.visitGetExpr(get)
+}
+
+func (get *GetExpr) print(v visitor[string]) string {
+	return v.visitGetExpr(get)
+}
+
+type SetExpr struct {
+	object Expr
+	name   Token
+	value  Expr
+}
+
+func NewSetExpr(object Expr, name Token, value Expr) *SetExpr {
+	return &SetExpr{
+		object: object,
+		name:   name,
+		value:  value,
+	}
+}
+
+func (set *SetExpr) accept(v visitor[any]) any {
+	return v.visitSetExpr(set)
+}
+
+func (set *SetExpr) print(v visitor[string]) string {
+	return v.visitSetExpr(set)
 }
