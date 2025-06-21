@@ -11,6 +11,7 @@ type visitor[T string | any] interface {
 	visitCallExpr(*CallExpr) T
 	visitGetExpr(*GetExpr) T
 	visitSetExpr(*SetExpr) T
+	visitThisExpr(*ThisExpr) T
 }
 
 type Expr interface {
@@ -216,4 +217,22 @@ func (set *SetExpr) accept(v visitor[any]) any {
 
 func (set *SetExpr) print(v visitor[string]) string {
 	return v.visitSetExpr(set)
+}
+
+type ThisExpr struct {
+	keyword Token
+}
+
+func NewThisExpr(keyword Token) *ThisExpr {
+	return &ThisExpr{
+		keyword: keyword,
+	}
+}
+
+func (this *ThisExpr) accept(v visitor[any]) any {
+	return v.visitThisExpr(this)
+}
+
+func (this *ThisExpr) print(v visitor[string]) string {
+	return v.visitThisExpr(this)
 }

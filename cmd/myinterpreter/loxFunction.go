@@ -41,6 +41,12 @@ func (lf *LoxFunction) call(i Interpreter, args []any) (retVal any) {
 	return nil
 }
 
+func (lf *LoxFunction) bind(this *LoxInstance) *LoxFunction {
+	env := NewState(lf.closure)
+	env.define("this", this)
+	return NewLoxFunction(lf.declaration, env, lf.isInitialiser)
+}
+
 func (lf *LoxFunction) String() string {
 	return fmt.Sprintf("<fn %v>", lf.declaration.name.Lexeme)
 }

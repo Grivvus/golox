@@ -193,6 +193,10 @@ func (i Interpreter) visitSetExpr(expr *SetExpr) any {
 	return exprRes
 }
 
+func (i Interpreter) visitThisExpr(expr *ThisExpr) any {
+	return i.lookUpVariable(expr.keyword, expr)
+}
+
 func (i Interpreter) visitAssignExpr(expr *AssignExpr) any {
 	value := i.evaluate(expr.value)
 	distance, ok := i.locals[expr]

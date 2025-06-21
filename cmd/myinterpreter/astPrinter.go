@@ -75,3 +75,7 @@ func (printer astPrinter) visitGetExpr(expr *GetExpr) string {
 func (printer astPrinter) visitSetExpr(expr *SetExpr) string {
 	return fmt.Sprintf("set on %v, value=%v\n", expr.object.print(printer), expr.value.print(printer))
 }
+
+func (printer astPrinter) visitThisExpr(expr *ThisExpr) string {
+	return "this"
+}

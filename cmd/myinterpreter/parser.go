@@ -318,6 +318,8 @@ func (p *Parser) literalExpr() Expr {
 		return NewLiteralExpr(nil)
 	} else if p.match(STRING, NUMBER) {
 		return NewLiteralExpr(p.getPrev().Literal)
+	} else if p.match(THIS) {
+		return NewThisExpr(p.getPrev())
 	} else if p.match(IDENTIFIER) {
 		return NewVarExpr(p.getPrev())
 	}

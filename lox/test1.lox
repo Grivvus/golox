@@ -1,7 +1,4 @@
-class Bacon {
-  eat() {
-    print "Crunch crunch crunch!";
-  }
+print this;
+fun notAMethod() {
+  print this;
 }
-
-Bacon().eat();

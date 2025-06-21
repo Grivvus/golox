@@ -5,25 +5,47 @@ import (
 	"os"
 )
 
-type functionType int
+type _functionType struct{}
 
-const (
-	NONE functionType = iota
-	FUNCTION
-	METHOD
-)
+var FunctionType = _functionType{}
+
+func (ft _functionType) None() int {
+	return 0
+}
+
+func (ft _functionType) Function() int {
+	return 1
+}
+
+func (ft _functionType) Method() int {
+	return 2
+}
+
+type _classType struct{}
+
+var ClassType = _classType{}
+
+func (ct _classType) None() int {
+	return 0
+}
+
+func (ct _classType) Class() int {
+	return 1
+}
 
 type Resolver struct {
 	interpreter     *Interpreter
 	scopes          []map[string]bool
-	currentFunction functionType
+	currentFunction int
+	currentClass    int
 }
 
 func NewResolver(i *Interpreter) *Resolver {
 	r := new(Resolver)
 	r.interpreter = i
 	r.scopes = make([]map[string]bool, 0)
-	r.currentFunction = NONE
+	r.currentFunction = FunctionType.None()
+	r.currentClass = ClassType.None()
 	return r
 }
 
@@ -56,7 +78,7 @@ func (r Resolver) resolveExpr(expr Expr) {
 	expr.accept(r)
 }
 
-func (r *Resolver) resolveFunction(stmt *Function, type_ functionType) {
+func (r *Resolver) resolveFunction(stmt *Function, type_ int) {
 	enclosingFunctionType := r.currentFunction
 	defer func() { r.currentFunction = enclosingFunctionType }()
 	r.currentFunction = type_
@@ -109,19 +131,27 @@ func (r Resolver) visitVarStmt(stmt *Var) {
 }
 
 func (r Resolver) visitClassStmt(stmt *Class) {
+	enclosingClass := r.currentClass
+	r.currentClass = ClassType.Class()
 	r.declare(stmt.name)
+	r.define(stmt.name)
+
+	r.beginScope()
+	r.currentScope()["this"] = true
 
 	for _, method := range stmt.methods {
-		r.resolveFunction(method, METHOD)
+		r.resolveFunction(method, FunctionType.Method())
 	}
 
-	r.define(stmt.name)
+	r.endScope()
+
+	r.currentClass = enclosingClass
 }
 
 func (r Resolver) visitFunctionStmt(stmt *Function) {
 	r.declare(stmt.name)
 	r.define(stmt.name)
-	r.resolveFunction(stmt, FUNCTION)
+	r.resolveFunction(stmt, FunctionType.Function())
 }
 
 func (r Resolver) visitExpressionStmt(stmt *Expression) {
@@ -141,7 +171,7 @@ func (r Resolver) visitPrintStmt(stmt *Print) {
 }
 
 func (r Resolver) visitReturnStmt(stmt *Return) {
-	if r.currentFunction == NONE {
+	if r.currentFunction == FunctionType.None() {
 		r.error(fmt.Sprintf("[line %v] Error at '%v': Can't return from top-level code", stmt.retKeyWord.line, stmt.retKeyWord.Lexeme))
 	}
 	if stmt.value != nil {
@@ -195,6 +225,14 @@ func (r Resolver) visitGetExpr(expr *GetExpr) any {
 func (r Resolver) visitSetExpr(expr *SetExpr) any {
 	r.resolveExpr(expr.value)
 	r.resolveExpr(expr.object)
+	return nil
+}
+
+func (r Resolver) visitThisExpr(expr *ThisExpr) any {
+	if r.currentClass == ClassType.None() {
+		r.error(fmt.Sprintf("[line %v] Can't use 'this' outside of a class", expr.keyword.line))
+	}
+	r.resolveLocal(expr, expr.keyword)
 	return nil
 }
 
