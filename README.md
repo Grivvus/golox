@@ -1,51 +1,54 @@
-[![progress-banner](https://backend.codecrafters.io/progress/interpreter/e39a60db-c870-4867-86c3-7145b0ea4997)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-This is a starting point for Go solutions to the
-["Build Your Own Build your own Interpreter" Challenge](https://app.codecrafters.io/courses/interpreter/overview).
+## Walk-through interpreter of lox programming language written in go
 
-This challenge follows the book
-[Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystrom.
+## build/run
 
-In this challenge you'll build an interpreter for
-[Lox](https://craftinginterpreters.com/the-lox-language.html), a simple
-scripting language. Along the way, you'll learn about tokenization, ASTs,
-tree-walk interpreters and more.
+`sh your_program.sh run filename.lox # if you want to run code`
 
-Before starting this challenge, make sure you've read the "Welcome" part of the
-book that contains these chapters:
+`sh your_program.sh tokenize filename.lox # if you want to get all tokens`
 
-- [Introduction](https://craftinginterpreters.com/introduction.html) (chapter 1)
-- [A Map of the Territory](https://craftinginterpreters.com/a-map-of-the-territory.html)
-  (chapter 2)
-- [The Lox Language](https://craftinginterpreters.com/the-lox-language.html)
-  (chapter 3)
+`sh your_program.sh parse filename.lox # if you want to parse expression`
 
-These chapters don't involve writing code, so they won't be covered in this
-challenge. This challenge will start from chapter 4,
-[Scanning](https://craftinginterpreters.com/scanning.html).
+`sh your_program.sh evaluate filename.lox # if you want to evaluate expression`
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## supports
+- [x] expressions
+- [x] statements
+- [x] control flow (branches, loops)
+- [x] functions
+- [x] classes, methods
+- [x] inheritance
 
-# Passing the first stage
 
-The entry point for your program is in `cmd/myinterpreter/main.go`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+## some lox code
 
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
 ```
+class Base {
+  method() {
+    print "Base.method()";
+  }
+}
 
-Time to move on to the next stage!
+class Parent < Base {
+  method() {
+    super.method();
+  }
+}
 
-# Stage 2 & beyond
+class Child < Parent {
+  method() {
+    super.method();
+  }
+}
 
-Note: This section is for stages 2 and beyond.
+var parent = Parent();
+parent.method();
+var child = Child();
+child.method();
+```
+### output
 
-1. Ensure you have `go (1.22)` installed locally
-2. Run `./your_program.sh` to run your program, which is implemented in
-   `cmd/myinterpreter/main.go`.
-3. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+```
+Base.method()
+Base.method()
+```
