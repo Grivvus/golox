@@ -1,5 +1,7 @@
 
-## Walk-through interpreter of lox programming language written in go
+## Tree-walk interpreter of lox programming language written in go
+
+[crafting interpreters book](https://www.craftinginterpreters.com/a-tree-walk-interpreter.html)
 
 ## build/run
 
