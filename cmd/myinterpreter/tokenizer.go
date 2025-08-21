@@ -10,6 +10,8 @@ const (
 	RIGHT_PAREN
 	LEFT_BRACE
 	RIGHT_BRACE
+	LEFT_SQUARE_BRACKET
+	RIGHT_SQUARE_BRACKET
 	STAR
 	DOT
 	COMMA
@@ -72,6 +74,7 @@ func fillMap() *map[string]TokenType {
 func (tt TokenType) String() string {
 	return [...]string{
 		"EOF", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_BRACE", "RIGHT_BRACE",
+		"LEFT_SQUARE_BRACKET", "RIGHT_SQUARE_BRACKET",
 		"STAR", "DOT", "COMMA", "PLUS", "MINUS", "SLASH", "SEMICOLON",
 		"EQUAL", "EQUAL_EQUAL", "BANG", "BANG_EQUAL",
 		"LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL",

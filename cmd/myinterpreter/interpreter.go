@@ -203,6 +203,16 @@ func (i Interpreter) visitSuperExpr(expr *SuperExpr) any {
 	return method.bind(instance)
 }
 
+func (i Interpreter) visitArrayDeclExpr(expr *ArrayDeclExpr) any {
+	panic("not implemented")
+	return nil
+}
+
+func (i Interpreter) visitSubscriptExpr(expr *SubscriptExpr) any {
+	panic("not implemented")
+	return nil
+}
+
 func (i Interpreter) visitThisExpr(expr *ThisExpr) any {
 	return i.lookUpVariable(expr.keyword, expr)
 }

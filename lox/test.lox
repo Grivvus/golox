@@ -1,21 +1,23 @@
-var x = "global";
-
-fun outer() {
-  var x = "outer";
-
-  fun middle() {
-    fun inner() {
-      print x;
-    }
-
-    inner();
-
-    var x = "middle";
-
-    inner();
+class Doughnut {
+  cook() {
+    print "Dunk in the fryer.";
+    this.finish("sprinkles");
   }
 
-  middle();
+  finish(ingredient) {
+    print "Finish with " + ingredient;
+  }
 }
 
-outer();
+class Cruller < Doughnut {
+  finish(ingredient) {
+    // No sprinkles, always icing.
+    super.finish("icing");
+  }
+}
+
+for (var i = 0; i < 10000; i = i + 1) {
+    Doughnut().cook();
+    Cruller().cook();
+    Cruller().finish("whatever");
+}

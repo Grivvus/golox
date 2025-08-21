@@ -339,10 +339,32 @@ func (p *Parser) literalExpr() Expr {
 		return NewThisExpr(p.getPrev())
 	} else if p.match(IDENTIFIER) {
 		return NewVarExpr(p.getPrev())
+	} else if p.match(LEFT_SQUARE_BRACKET) {
+		return p.arrayLiteral()
 	}
 	p.currentIndex++
 	p.error("Expect expression")
 	return nil
+}
+
+func (p *Parser) arrayLiteral() Expr {
+	elements := make([]Expr, 0)
+	if p.check(RIGHT_SQUARE_BRACKET) {
+		p.currentIndex++
+		return NewArrayDeclExpr(elements)
+	} else {
+		elements = append(elements, p.nextExpr())
+	}
+	for p.match(COMMA) {
+		if p.getCurrent().Token != RIGHT_SQUARE_BRACKET {
+			elements = append(elements, p.nextExpr())
+		}
+	}
+	if !p.check(RIGHT_SQUARE_BRACKET) {
+		p.error("Expect ']' after array declaration")
+	}
+	p.currentIndex++
+	return NewArrayDeclExpr(elements)
 }
 
 func (p *Parser) group() Expr {
@@ -501,12 +523,12 @@ func (p *Parser) assignment() Expr {
 
 	if p.match(EQUAL) {
 		value := p.assignment()
-		switch expr.(type) {
+		switch expr := expr.(type) {
 		case *VarExpr:
-			name := expr.(*VarExpr).name
+			name := expr.name
 			return NewAssignExpr(name, value)
 		case *GetExpr:
-			get := expr.(*GetExpr)
+			get := expr
 			return NewSetExpr(get.object, get.name, value)
 		default:
 			p.error("Invalid assignment target")
