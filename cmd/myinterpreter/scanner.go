@@ -58,6 +58,10 @@ COMMENTS_AGAGIN:
 		return NewToken("{", LEFT_BRACE, nil, s.CurrentLine), nil
 	case '}':
 		return NewToken("}", RIGHT_BRACE, nil, s.CurrentLine), nil
+	case '[':
+		return NewToken("[", LEFT_SQUARE_BRACKET, nil, s.CurrentLine), nil
+	case ']':
+		return NewToken("]", RIGHT_SQUARE_BRACKET, nil, s.CurrentLine), nil
 	case '*':
 		return NewToken("*", STAR, nil, s.CurrentLine), nil
 	case '.':
@@ -70,6 +74,8 @@ COMMENTS_AGAGIN:
 		return NewToken("-", MINUS, nil, s.CurrentLine), nil
 	case '/':
 		return NewToken("/", SLASH, nil, s.CurrentLine), nil
+	case '%':
+		return NewToken("%", PERCENT, nil, s.CurrentLine), nil
 	case ';':
 		return NewToken(";", SEMICOLON, nil, s.CurrentLine), nil
 	case '=':

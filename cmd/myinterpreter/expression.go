@@ -13,6 +13,8 @@ type visitor[T string | any] interface {
 	visitSetExpr(*SetExpr) T
 	visitThisExpr(*ThisExpr) T
 	visitSuperExpr(*SuperExpr) T
+	visitArrayDeclExpr(*ArrayDeclExpr) T
+	visitSubscriptExpr(*SubscriptExpr) T
 }
 
 type Expr interface {
@@ -258,4 +260,44 @@ func (super *SuperExpr) accept(v visitor[any]) any {
 
 func (super *SuperExpr) print(v visitor[string]) string {
 	return v.visitSuperExpr(super)
+}
+
+type ArrayDeclExpr struct {
+	elements []Expr
+}
+
+func NewArrayDeclExpr(elements []Expr) *ArrayDeclExpr {
+	return &ArrayDeclExpr{elements: elements}
+}
+
+func (arr *ArrayDeclExpr) accept(v visitor[any]) any {
+	return v.visitArrayDeclExpr(arr)
+}
+
+func (arr *ArrayDeclExpr) print(v visitor[string]) string {
+	return v.visitArrayDeclExpr(arr)
+}
+
+type SubscriptExpr struct {
+	objectToken Token
+	object      Expr
+	indexToken  Token
+	index       Expr
+}
+
+func NewSubscriptExpr(object, index Expr, objectT, indexT Token) *SubscriptExpr {
+	return &SubscriptExpr{
+		object:      object,
+		index:       index,
+		objectToken: objectT,
+		indexToken:  indexT,
+	}
+}
+
+func (sub *SubscriptExpr) accept(v visitor[any]) any {
+	return v.visitSubscriptExpr(sub)
+}
+
+func (sub *SubscriptExpr) print(v visitor[string]) string {
+	return v.visitSubscriptExpr(sub)
 }

@@ -243,6 +243,12 @@ func (r Resolver) visitCallExpr(expr *CallExpr) any {
 	return nil
 }
 
+func (r Resolver) visitSubscriptExpr(expr *SubscriptExpr) any {
+	r.resolveExpr(expr.object)
+	r.resolveExpr(expr.index)
+	return nil
+}
+
 func (r Resolver) visitGetExpr(expr *GetExpr) any {
 	r.resolveExpr(expr.object)
 	return nil
@@ -279,6 +285,13 @@ func (r Resolver) visitGroupingExpr(expr *GroupingExpr) any {
 }
 
 func (r Resolver) visitLiteralExpr(expr *LiteralExpr) any {
+	return nil
+}
+
+func (r Resolver) visitArrayDeclExpr(expr *ArrayDeclExpr) any {
+	for _, element := range expr.elements {
+		r.resolveExpr(element)
+	}
 	return nil
 }
 

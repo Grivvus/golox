@@ -1,0 +1,11 @@
+// empty
+[]
+
+// empty with space 
+[ ]
+
+// regular
+[1, 2, 3, 4, 6 > 3]
+
+// with comma at the end
+[1, 2, 3,]

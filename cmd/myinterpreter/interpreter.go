@@ -17,6 +17,8 @@ func NewInterpreter(parser *Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
 	i.state.define("clock", NewLoxTime())
+	i.state.define("floor", NewFloor())
+	i.state.define("str", NewStr())
 	i.globals = i.state
 	i.locals = make(map[Expr]int, 0)
 	i.parser = parser
@@ -66,6 +68,16 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 	case SLASH:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) / right.(float64)
+		}
+		i.loxRuntimePanicBinNumeric()
+	case PERCENT:
+		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
+			leftIntegral := int64(left.(float64))
+			rightIntegral := int64(right.(float64))
+			if float64(leftIntegral) > left.(float64) || float64(rightIntegral) > right.(float64) {
+				i.error(expr.operator, "Expect integral numbers")
+			}
+			return float64(leftIntegral % rightIntegral)
 		}
 		i.loxRuntimePanicBinNumeric()
 	case PLUS:
@@ -166,6 +178,38 @@ FINE:
 		i.error(expr.caleeToken, fmt.Sprintf("expected %v arguments but got %v\n", function.arity(), len(arguments)))
 	}
 	return function.call(i, arguments)
+}
+
+func (i Interpreter) visitArrayDeclExpr(expr *ArrayDeclExpr) any {
+	eval_elements := make([]any, len(expr.elements))
+	for idx, element := range expr.elements {
+		eval_elements[idx] = i.evaluate(element)
+	}
+	return eval_elements
+}
+
+func (i Interpreter) visitSubscriptExpr(expr *SubscriptExpr) any {
+	array := i.evaluate(expr.object)
+	index := i.evaluate(expr.index)
+	switch array := array.(type) {
+	case []any:
+		switch index := index.(type) {
+		case float64:
+			intIndex := int64(index)
+			if float64(intIndex) < index {
+				i.error(expr.indexToken, "Expected integral number")
+			}
+			if intIndex >= int64(len(array)) {
+				i.error(expr.indexToken, "Out of range")
+			}
+			return array[intIndex]
+		default:
+			i.error(expr.indexToken, "Expect number")
+		}
+	default:
+		i.error(expr.objectToken, "Only arrays can be subscripted")
+	}
+	panic("unreachable")
 }
 
 func (i Interpreter) visitGetExpr(expr *GetExpr) any {
@@ -359,6 +403,6 @@ func (i Interpreter) loxRuntimePanicBinNumeric() {
 }
 
 func (i Interpreter) error(token Token, msg string) {
-	fmt.Fprint(os.Stderr, "[line %v] %v.\n", token.Line, msg)
+	fmt.Fprintf(os.Stderr, "[line %v] at '%v' %v.\n", token.Line, token.Lexeme, msg)
 	os.Exit(70)
 }

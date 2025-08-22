@@ -83,3 +83,18 @@ func (printer astPrinter) visitThisExpr(expr *ThisExpr) string {
 func (printer astPrinter) visitSuperExpr(expr *SuperExpr) string {
 	return "super\n"
 }
+
+func (printer astPrinter) visitArrayDeclExpr(expr *ArrayDeclExpr) string {
+	b := strings.Builder{}
+	b.WriteString("[ ")
+	for _, element := range expr.elements {
+		b.WriteString(element.print(printer))
+		b.WriteString(" ")
+	}
+	b.WriteString("]")
+	return b.String()
+}
+
+func (printer astPrinter) visitSubscriptExpr(expr *SubscriptExpr) string {
+	return fmt.Sprintf("subscript index %v", expr.index.print(printer))
+}

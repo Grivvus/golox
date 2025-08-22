@@ -339,10 +339,32 @@ func (p *Parser) literalExpr() Expr {
 		return NewThisExpr(p.getPrev())
 	} else if p.match(IDENTIFIER) {
 		return NewVarExpr(p.getPrev())
+	} else if p.match(LEFT_SQUARE_BRACKET) {
+		return p.arrayLiteral()
 	}
 	p.currentIndex++
 	p.error("Expect expression")
 	return nil
+}
+
+func (p *Parser) arrayLiteral() Expr {
+	elements := make([]Expr, 0)
+	if p.check(RIGHT_SQUARE_BRACKET) {
+		p.currentIndex++
+		return NewArrayDeclExpr(elements)
+	} else {
+		elements = append(elements, p.nextExpr())
+	}
+	for p.match(COMMA) {
+		if p.getCurrent().Token != RIGHT_SQUARE_BRACKET {
+			elements = append(elements, p.nextExpr())
+		}
+	}
+	if !p.check(RIGHT_SQUARE_BRACKET) {
+		p.error("Expect ']' after array declaration")
+	}
+	p.currentIndex++
+	return NewArrayDeclExpr(elements)
 }
 
 func (p *Parser) group() Expr {
@@ -381,11 +403,24 @@ func (p *Parser) finishCall(callee Expr) Expr {
 	return NewCallExpr(p.getPrev(), callee, arguments)
 }
 
+func (p *Parser) finishSubscript(object Expr) Expr {
+	index := p.nextExpr()
+	if p.getCurrent().Token != RIGHT_SQUARE_BRACKET {
+		p.error("Expect ']' after array subscription")
+	}
+	indexToken := p.getPrev()
+	objectToken := p.tokens[p.currentIndex-2]
+	p.currentIndex++
+	return NewSubscriptExpr(object, index, objectToken, indexToken)
+}
+
 func (p *Parser) call() Expr {
 	expr := p.group()
 	for true {
 		if p.match(LEFT_PAREN) {
 			expr = p.finishCall(expr)
+		} else if p.match(LEFT_SQUARE_BRACKET) {
+			expr = p.finishSubscript(expr)
 		} else if p.match(DOT) {
 			name := p.getCurrent()
 			p.currentIndex++
@@ -417,7 +452,7 @@ func (p *Parser) factor() Expr {
 	if expr == nil {
 		return nil
 	}
-	for p.match(STAR, SLASH) {
+	for p.match(STAR, SLASH, PERCENT) {
 		operator := p.getPrev()
 		right := p.unary()
 		if right == nil {
@@ -501,12 +536,12 @@ func (p *Parser) assignment() Expr {
 
 	if p.match(EQUAL) {
 		value := p.assignment()
-		switch expr.(type) {
+		switch expr := expr.(type) {
 		case *VarExpr:
-			name := expr.(*VarExpr).name
+			name := expr.name
 			return NewAssignExpr(name, value)
 		case *GetExpr:
-			get := expr.(*GetExpr)
+			get := expr
 			return NewSetExpr(get.object, get.name, value)
 		default:
 			p.error("Invalid assignment target")
