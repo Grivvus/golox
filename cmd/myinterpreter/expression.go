@@ -279,14 +279,18 @@ func (arr *ArrayDeclExpr) print(v visitor[string]) string {
 }
 
 type SubscriptExpr struct {
-	object Expr
-	index  Expr
+	objectToken Token
+	object      Expr
+	indexToken  Token
+	index       Expr
 }
 
-func NewSubscriptExpr(object, index Expr) *SubscriptExpr {
+func NewSubscriptExpr(object, index Expr, objectT, indexT Token) *SubscriptExpr {
 	return &SubscriptExpr{
-		object: object,
-		index:  index,
+		object:      object,
+		index:       index,
+		objectToken: objectT,
+		indexToken:  indexT,
 	}
 }
 

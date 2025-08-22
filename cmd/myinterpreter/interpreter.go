@@ -168,6 +168,38 @@ FINE:
 	return function.call(i, arguments)
 }
 
+func (i Interpreter) visitArrayDeclExpr(expr *ArrayDeclExpr) any {
+	eval_elements := make([]any, len(expr.elements))
+	for idx, element := range expr.elements {
+		eval_elements[idx] = i.evaluate(element)
+	}
+	return eval_elements
+}
+
+func (i Interpreter) visitSubscriptExpr(expr *SubscriptExpr) any {
+	array := i.evaluate(expr.object)
+	index := i.evaluate(expr.index)
+	switch array := array.(type) {
+	case []any:
+		switch index := index.(type) {
+		case float64:
+			intIndex := int64(index)
+			if float64(intIndex) < index {
+				i.error(expr.indexToken, "Expected integral number")
+			}
+			if intIndex >= int64(len(array)) {
+				i.error(expr.indexToken, "Out of range")
+			}
+			return array[intIndex]
+		default:
+			i.error(expr.indexToken, "Expect number")
+		}
+	default:
+		i.error(expr.objectToken, "Only arrays can be subscripted")
+	}
+	panic("unreachable")
+}
+
 func (i Interpreter) visitGetExpr(expr *GetExpr) any {
 	object := i.evaluate(expr.object)
 	switch object.(type) {
@@ -201,16 +233,6 @@ func (i Interpreter) visitSuperExpr(expr *SuperExpr) any {
 		i.error(expr.keyword, fmt.Sprintf("Undefined property %v'", expr.method.Lexeme))
 	}
 	return method.bind(instance)
-}
-
-func (i Interpreter) visitArrayDeclExpr(expr *ArrayDeclExpr) any {
-	panic("not implemented")
-	return nil
-}
-
-func (i Interpreter) visitSubscriptExpr(expr *SubscriptExpr) any {
-	panic("not implemented")
-	return nil
 }
 
 func (i Interpreter) visitThisExpr(expr *ThisExpr) any {
@@ -369,6 +391,6 @@ func (i Interpreter) loxRuntimePanicBinNumeric() {
 }
 
 func (i Interpreter) error(token Token, msg string) {
-	fmt.Fprint(os.Stderr, "[line %v] %v.\n", token.Line, msg)
+	fmt.Fprintf(os.Stderr, "[line %v] at '%v' %v.\n", token.Line, token.Lexeme, msg)
 	os.Exit(70)
 }

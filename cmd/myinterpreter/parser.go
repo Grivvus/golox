@@ -403,11 +403,24 @@ func (p *Parser) finishCall(callee Expr) Expr {
 	return NewCallExpr(p.getPrev(), callee, arguments)
 }
 
+func (p *Parser) finishSubscript(object Expr) Expr {
+	index := p.nextExpr()
+	if p.getCurrent().Token != RIGHT_SQUARE_BRACKET {
+		p.error("Expect ']' after array subscription")
+	}
+	indexToken := p.getPrev()
+	objectToken := p.tokens[p.currentIndex-2]
+	p.currentIndex++
+	return NewSubscriptExpr(object, index, objectToken, indexToken)
+}
+
 func (p *Parser) call() Expr {
 	expr := p.group()
 	for true {
 		if p.match(LEFT_PAREN) {
 			expr = p.finishCall(expr)
+		} else if p.match(LEFT_SQUARE_BRACKET) {
+			expr = p.finishSubscript(expr)
 		} else if p.match(DOT) {
 			name := p.getCurrent()
 			p.currentIndex++
