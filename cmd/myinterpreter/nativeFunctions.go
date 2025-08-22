@@ -5,10 +5,14 @@ import (
 	"time"
 )
 
-type LoxTime struct{}
+type nativeFnStringImpl struct{}
 
-func NewLoxTime() *LoxTime {
-	return new(LoxTime)
+func (s nativeFnStringImpl) String() string {
+	return "<native fn>"
+}
+
+type LoxTime struct {
+	nativeFnStringImpl
 }
 
 func (t LoxTime) call(i Interpreter, args []any) any {
@@ -19,22 +23,12 @@ func (t LoxTime) arity() int {
 	return 0
 }
 
-func (t LoxTime) String() string {
-	return "<native fn>"
-}
-
-type Floor struct{}
-
-func NewFloor() *Floor {
-	return &Floor{}
+type Floor struct {
+	nativeFnStringImpl
 }
 
 func (f Floor) call(i Interpreter, args []any) any {
-	if len(args) == 0 || len(args) > 1 {
-		i.error(i.parser.getCurrent(), "Expect only 1 argument")
-	}
-	arg := args[0]
-	switch arg := arg.(type) {
+	switch arg := args[0].(type) {
 	case float64:
 		return float64(int64(arg))
 	default:
@@ -47,20 +41,11 @@ func (f Floor) arity() int {
 	return 1
 }
 
-func (f Floor) String() string {
-	return "<native fn>"
-}
-
-type Str struct{}
-
-func NewStr() *Str {
-	return &Str{}
+type Str struct {
+	nativeFnStringImpl
 }
 
 func (s Str) call(i Interpreter, args []any) any {
-	if len(args) == 0 || len(args) > 1 {
-		i.error(i.parser.getCurrent(), "Expect only 1 argument")
-	}
 	return fmt.Sprintf("%v", args[0])
 }
 
@@ -68,11 +53,9 @@ func (s Str) arity() int {
 	return 1
 }
 
-func (s Str) String() string {
-	return "<native fn>"
+type Len struct {
+	nativeFnStringImpl
 }
-
-type Len struct{}
 
 func (l Len) call(i Interpreter, args []any) any {
 	switch arr := args[0].(type) {
@@ -88,6 +71,15 @@ func (l Len) arity() int {
 	return 1
 }
 
-func (l Len) String() string {
-	return "<native fn>"
+type PrintLine struct {
+	nativeFnStringImpl
+}
+
+func (p PrintLine) call(i Interpreter, args []any) any {
+	fmt.Println(args[0])
+	return nil
+}
+
+func (p PrintLine) arity() int {
+	return 1
 }

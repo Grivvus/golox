@@ -24,10 +24,11 @@ func NewInterpreter(parser *Parser) *Interpreter {
 }
 
 func (i *Interpreter) addBuiltins() {
-	i.state.define("clock", NewLoxTime())
-	i.state.define("floor", NewFloor())
-	i.state.define("str", NewStr())
+	i.state.define("clock", &LoxTime{})
+	i.state.define("floor", &Floor{})
+	i.state.define("str", &Str{})
 	i.state.define("len", &Len{})
+	i.state.define("println", &PrintLine{})
 }
 
 func (i Interpreter) visitVarExpr(expr *VarExpr) any {

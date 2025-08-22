@@ -1,0 +1,12 @@
+println(len([1, 2, 3]));
+println([1, 2, 3]);
+println("abcde");
+println(1);
+println(123.123);
+class A {
+    func() {
+        println("Hello from class");
+    }
+}
+println(A);
+println(A());
