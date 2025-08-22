@@ -17,6 +17,7 @@ func NewInterpreter(parser *Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
 	i.state.define("clock", NewLoxTime())
+	i.state.define("floor", NewFloor())
 	i.globals = i.state
 	i.locals = make(map[Expr]int, 0)
 	i.parser = parser
@@ -66,6 +67,16 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 	case SLASH:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) / right.(float64)
+		}
+		i.loxRuntimePanicBinNumeric()
+	case PERCENT:
+		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
+			leftIntegral := int64(left.(float64))
+			rightIntegral := int64(right.(float64))
+			if float64(leftIntegral) > left.(float64) || float64(rightIntegral) > right.(float64) {
+				i.error(expr.operator, "Expect integral numbers")
+			}
+			return float64(leftIntegral % rightIntegral)
 		}
 		i.loxRuntimePanicBinNumeric()
 	case PLUS:

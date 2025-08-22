@@ -74,6 +74,8 @@ COMMENTS_AGAGIN:
 		return NewToken("-", MINUS, nil, s.CurrentLine), nil
 	case '/':
 		return NewToken("/", SLASH, nil, s.CurrentLine), nil
+	case '%':
+		return NewToken("%", PERCENT, nil, s.CurrentLine), nil
 	case ';':
 		return NewToken(";", SEMICOLON, nil, s.CurrentLine), nil
 	case '=':
