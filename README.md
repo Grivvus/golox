@@ -21,6 +21,8 @@
 - [x] classes, methods
 - [x] inheritance
 
+- [x] arrays (partly, they're immutable, no helpfull builtins, only declaration and subscription) 
+
 
 ## some lox code
 
