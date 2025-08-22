@@ -1,4 +1,3 @@
-// Matrix multiplication for 2x2 matrices
 fun multiply(a, b) {
   var a00 = a[0][0] * b[0][0] + a[0][1] * b[1][0];
   var a01 = a[0][0] * b[0][1] + a[0][1] * b[1][1];
@@ -7,7 +6,6 @@ fun multiply(a, b) {
   return [[a00, a01], [a10, a11]];
 }
 
-// Matrix exponentiation using iterative method
 fun power(matrix, n) {
   var result = [[1, 0], [0, 1]];
   var base = matrix;
@@ -22,7 +20,6 @@ fun power(matrix, n) {
   return result;
 }
 
-// Fibonacci number using matrix exponentiation
 fun fib(n) {
   if (n == 0) return 0;
   var matrix = [[1, 1], [1, 0]];
@@ -30,10 +27,6 @@ fun fib(n) {
   return powered[0][0];
 }
 
-// Example usage
 for (var i = 0; i < 20; i = i + 1) {
-    print "fib";
-    print i;
-    print "is";
-    print fib(i);
+    print "fib(" + str(i) + ") = " + str(fib(i));
 }

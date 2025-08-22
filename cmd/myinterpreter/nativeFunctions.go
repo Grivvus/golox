@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -47,5 +48,26 @@ func (f Floor) arity() int {
 }
 
 func (f Floor) String() string {
+	return "<native fn>"
+}
+
+type Str struct{}
+
+func NewStr() *Str {
+	return &Str{}
+}
+
+func (s Str) call(i Interpreter, args []any) any {
+	if len(args) == 0 || len(args) > 1 {
+		i.error(i.parser.getCurrent(), "Expect only 1 argument")
+	}
+	return fmt.Sprintf("%v", args[0])
+}
+
+func (s Str) arity() int {
+	return 1
+}
+
+func (s Str) String() string {
 	return "<native fn>"
 }

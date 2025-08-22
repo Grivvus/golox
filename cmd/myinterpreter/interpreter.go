@@ -18,6 +18,7 @@ func NewInterpreter(parser *Parser) *Interpreter {
 	i.state = NewState(nil)
 	i.state.define("clock", NewLoxTime())
 	i.state.define("floor", NewFloor())
+	i.state.define("str", NewStr())
 	i.globals = i.state
 	i.locals = make(map[Expr]int, 0)
 	i.parser = parser
