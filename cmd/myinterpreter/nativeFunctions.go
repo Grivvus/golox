@@ -71,3 +71,23 @@ func (s Str) arity() int {
 func (s Str) String() string {
 	return "<native fn>"
 }
+
+type Len struct{}
+
+func (l Len) call(i Interpreter, args []any) any {
+	switch arr := args[0].(type) {
+	case []any:
+		return float64(len(arr))
+	default:
+		i.error(i.parser.getCurrent(), "Only arrays have len")
+	}
+	panic("unreachable")
+}
+
+func (l Len) arity() int {
+	return 1
+}
+
+func (l Len) String() string {
+	return "<native fn>"
+}

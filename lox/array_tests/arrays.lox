@@ -7,5 +7,12 @@ print a;
 print a[0];
 print b[1];
 print c[1];
+print len(c);
+var index = 2;
+if (index >= len(c)) {
+    print "Out of range";
+} else {
+    print c[index];
+}
 // out of range
 c[2];

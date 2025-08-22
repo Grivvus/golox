@@ -16,13 +16,18 @@ type Interpreter struct {
 func NewInterpreter(parser *Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
-	i.state.define("clock", NewLoxTime())
-	i.state.define("floor", NewFloor())
-	i.state.define("str", NewStr())
+	i.addBuiltins()
 	i.globals = i.state
 	i.locals = make(map[Expr]int, 0)
 	i.parser = parser
 	return i
+}
+
+func (i *Interpreter) addBuiltins() {
+	i.state.define("clock", NewLoxTime())
+	i.state.define("floor", NewFloor())
+	i.state.define("str", NewStr())
+	i.state.define("len", &Len{})
 }
 
 func (i Interpreter) visitVarExpr(expr *VarExpr) any {
