@@ -284,7 +284,7 @@ func (p *Parser) forStatement() Stmt {
 }
 
 func (p *Parser) isAtEnd() bool {
-	return p.tokens[p.currentIndex].Token == EOF
+	return p.getCurrent().Token == EOF
 }
 
 func (p *Parser) check(t TokenType) bool {
