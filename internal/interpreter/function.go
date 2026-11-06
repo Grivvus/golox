@@ -1,16 +1,17 @@
-package main
+package interpreter
 
 import (
 	"fmt"
+	"golox/internal/parser"
 )
 
 type LoxFunction struct {
-	declaration   *Function
+	declaration   *parser.Function
 	closure       *State
 	isInitialiser bool
 }
 
-func NewLoxFunction(declaration *Function, closure *State, isInitialiser bool) *LoxFunction {
+func NewLoxFunction(declaration *parser.Function, closure *State, isInitialiser bool) *LoxFunction {
 	lf := new(LoxFunction)
 	lf.declaration = declaration
 	lf.closure = closure
@@ -19,7 +20,7 @@ func NewLoxFunction(declaration *Function, closure *State, isInitialiser bool) *
 }
 
 func (lf *LoxFunction) arity() int {
-	return len(lf.declaration.arguments)
+	return len(lf.declaration.Arguments)
 }
 
 func (lf *LoxFunction) call(i Interpreter, args []any) (retVal any) {
@@ -37,9 +38,9 @@ func (lf *LoxFunction) call(i Interpreter, args []any) (retVal any) {
 	}()
 	funState := NewState(lf.closure)
 	for i, arg := range args {
-		funState.define(lf.declaration.arguments[i].Lexeme, arg)
+		funState.define(lf.declaration.Arguments[i].Lexeme, arg)
 	}
-	i.executeBlock(lf.declaration.body, funState)
+	i.executeBlock(lf.declaration.Body, funState)
 
 	if lf.isInitialiser {
 		return lf.closure.accessAt(0, "this")
@@ -55,5 +56,5 @@ func (lf *LoxFunction) bind(this *LoxInstance) *LoxFunction {
 }
 
 func (lf *LoxFunction) String() string {
-	return fmt.Sprintf("<fn %v>", lf.declaration.name.Lexeme)
+	return fmt.Sprintf("<fn %v>", lf.declaration.Name.Lexeme)
 }

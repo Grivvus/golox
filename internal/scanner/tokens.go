@@ -1,4 +1,4 @@
-package main
+package scanner
 
 import "fmt"
 
@@ -47,6 +47,7 @@ const (
 	NIL
 	PRINT
 	VAR
+	SKIP
 )
 
 func fillMap() *map[string]TokenType {
@@ -92,14 +93,13 @@ type Token struct {
 	Line    uint
 }
 
-func NewToken(lexeme string, token TokenType, literal any, line uint) *Token {
-	t := new(Token)
-	t.Lexeme = lexeme
-	t.Token = token
-	t.Literal = literal
-	t.Line = line
-
-	return t
+func NewToken(lexeme string, token TokenType, literal any, line uint) Token {
+	return Token{
+		Lexeme:  lexeme,
+		Token:   token,
+		Literal: literal,
+		Line:    line,
+	}
 }
 
 func (t *Token) String() string {
@@ -122,4 +122,8 @@ func (t *Token) String() string {
 	s := fmt.Sprintf("%v %v %v", t.Token, t.Lexeme, literalStr)
 
 	return s
+}
+
+func (t Token) Skip() Token {
+	return Token{Token: SKIP}
 }

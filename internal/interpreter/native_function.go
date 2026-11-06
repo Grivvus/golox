@@ -1,4 +1,4 @@
-package main
+package interpreter
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ func (f Floor) call(i Interpreter, args []any) any {
 	case float64:
 		return float64(int64(arg))
 	default:
-		i.error(i.parser.getCurrent(), "Argument should be a number")
+		i.error(i.parser.GetCurrent(), "Argument should be a number")
 	}
 	panic("unreachable")
 }
@@ -62,7 +62,7 @@ func (l Len) call(i Interpreter, args []any) any {
 	case []any:
 		return float64(len(arr))
 	default:
-		i.error(i.parser.getCurrent(), "Only arrays have len")
+		i.error(i.parser.GetCurrent(), "Only arrays have len")
 	}
 	panic("unreachable")
 }

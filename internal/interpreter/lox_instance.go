@@ -1,7 +1,8 @@
-package main
+package interpreter
 
 import (
 	"fmt"
+	"golox/internal/scanner"
 	"os"
 )
 
@@ -21,7 +22,7 @@ func (instance *LoxInstance) String() string {
 	return fmt.Sprintf("%v instance", instance.cls.String())
 }
 
-func (instance *LoxInstance) Get(name Token) any {
+func (instance *LoxInstance) Get(name scanner.Token) any {
 	value, ok := instance.fields[name.Lexeme]
 	if ok {
 		return value
@@ -35,6 +36,6 @@ func (instance *LoxInstance) Get(name Token) any {
 	return nil
 }
 
-func (instance *LoxInstance) Set(name Token, value any) {
+func (instance *LoxInstance) Set(name scanner.Token, value any) {
 	instance.fields[name.Lexeme] = value
 }

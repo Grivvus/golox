@@ -1,4 +1,4 @@
-package main
+package interpreter
 
 type LoxCallable interface {
 	arity() int

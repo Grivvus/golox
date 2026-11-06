@@ -1,4 +1,4 @@
-package main
+package scanner
 
 import (
 	"errors"
@@ -15,7 +15,7 @@ type Scanner struct {
 	CurrentLine  uint
 }
 
-func NewScanner(source []rune) *Scanner {
+func New(source []rune) *Scanner {
 	scanner := new(Scanner)
 	scanner.Source = source
 	scanner.CurrentIndex = 0
@@ -26,7 +26,24 @@ func NewScanner(source []rune) *Scanner {
 	return scanner
 }
 
-func (s *Scanner) NextToken() (*Token, error) {
+func (s *Scanner) Scan() ([]Token, error) {
+	tokens := make([]Token, 0, 512)
+	for {
+		token, err := s.NextToken()
+		if err != nil {
+			return nil, err
+		}
+		if token.Token == SKIP {
+			continue
+		}
+		if token.Token == EOF {
+			break
+		}
+	}
+	return tokens, nil
+}
+
+func (s *Scanner) NextToken() (Token, error) {
 	if s.CurrentIndex < len(s.Source) && s.Source[s.CurrentIndex] == '\n' {
 		s.CurrentIndex++
 		s.CurrentLine++
@@ -118,15 +135,11 @@ COMMENTS_AGAGIN:
 			return NewToken("\""+string(res_str)+"\"", STRING, string(res_str), s.CurrentLine), nil
 		} else {
 			s.ExitCode = 65
-			return nil, errors.New(fmt.Sprintf("[line %v] Error: Unterminated string.", s.CurrentLine))
+			return Token{}, errors.New(fmt.Sprintf("[line %v] Error: Unterminated string.", s.CurrentLine))
 		}
-	case '\t':
-		return nil, nil
-	case ' ':
-		return nil, nil
-	case 10:
 		// line feed ASCII code 10
-		return nil, nil
+	case '\t', ' ', 10:
+		return Token{}.Skip(), nil
 	default:
 		if isDigit(char) {
 			var digits []rune
@@ -150,7 +163,7 @@ COMMENTS_AGAGIN:
 			}
 			parsed, err := strconv.ParseFloat(string(digits), 64)
 			if err != nil {
-				return nil, errors.New("Can't parse NUMBER")
+				return Token{}, errors.New("Can't parse NUMBER")
 			}
 			return NewToken(numLiteral, NUMBER, parsed, s.CurrentLine), nil
 		} else if isAlpha(char) {
@@ -170,7 +183,7 @@ COMMENTS_AGAGIN:
 
 		}
 		s.ExitCode = 65
-		return nil, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))
+		return Token{}, errors.New(fmt.Sprintf("[line %v] Error: Unexpected character: %v", s.CurrentLine, string(char)))
 	}
 }
 

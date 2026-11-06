@@ -1,7 +1,9 @@
-package main
+package interpreter
 
 import (
 	"fmt"
+	"golox/internal/parser"
+	"golox/internal/scanner"
 	"os"
 	"reflect"
 )
@@ -9,17 +11,17 @@ import (
 type Interpreter struct {
 	state   *State
 	globals *State
-	locals  map[Expr]int
-	parser  *Parser
+	locals  map[parser.Expr]int
+	parser  *parser.Parser
 }
 
-func NewInterpreter(parser *Parser) *Interpreter {
+func New(par *parser.Parser) *Interpreter {
 	i := new(Interpreter)
 	i.state = NewState(nil)
 	i.addBuiltins()
 	i.globals = i.state
-	i.locals = make(map[Expr]int, 0)
-	i.parser = parser
+	i.locals = make(map[parser.Expr]int, 0)
+	i.parser = par
 	return i
 }
 
@@ -31,25 +33,25 @@ func (i *Interpreter) addBuiltins() {
 	i.state.define("println", &PrintLine{})
 }
 
-func (i Interpreter) visitVarExpr(expr *VarExpr) any {
-	return i.lookUpVariable(expr.name, expr)
+func (i Interpreter) VisitVarExpr(expr *parser.VarExpr) any {
+	return i.lookUpVariable(expr.Name, expr)
 }
 
-func (i Interpreter) visitLiteralExpr(expr *LiteralExpr) any {
-	return expr.value
+func (i Interpreter) VisitLiteralExpr(expr *parser.LiteralExpr) any {
+	return expr.Value
 }
 
-func (i Interpreter) visitGroupingExpr(expr *GroupingExpr) any {
-	return i.evaluate(expr.expr)
+func (i Interpreter) VisitGroupingExpr(expr *parser.GroupingExpr) any {
+	return i.Evaluate(expr.Expr)
 }
 
-func (i Interpreter) visitUnaryExpr(expr *UnaryExpr) any {
-	right := i.evaluate(expr.right)
+func (i Interpreter) VisitUnaryExpr(expr *parser.UnaryExpr) any {
+	right := i.Evaluate(expr.Right)
 
-	switch expr.operator.Token {
-	case BANG:
+	switch expr.Operator.Token {
+	case scanner.BANG:
 		return !booleanCast(right)
-	case MINUS:
+	case scanner.MINUS:
 		switch right.(type) {
 		case float64:
 			return -(right.(float64))
@@ -61,32 +63,32 @@ func (i Interpreter) visitUnaryExpr(expr *UnaryExpr) any {
 	return nil
 }
 
-func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
-	left := i.evaluate(expr.left)
-	right := i.evaluate(expr.right)
+func (i Interpreter) VisitBinaryExpr(expr *parser.BinaryExpr) any {
+	left := i.Evaluate(expr.Left)
+	right := i.Evaluate(expr.Right)
 
-	switch expr.operator.Token {
-	case STAR:
+	switch expr.Operator.Token {
+	case scanner.STAR:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) * right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case SLASH:
+	case scanner.SLASH:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) / right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case PERCENT:
+	case scanner.PERCENT:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			leftIntegral := int64(left.(float64))
 			rightIntegral := int64(right.(float64))
 			if float64(leftIntegral) > left.(float64) || float64(rightIntegral) > right.(float64) {
-				i.error(expr.operator, "Expect integral numbers")
+				i.error(expr.Operator, "Expect integral numbers")
 			}
 			return float64(leftIntegral % rightIntegral)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case PLUS:
+	case scanner.PLUS:
 		left_type := reflect.TypeOf(left)
 		right_type := reflect.TypeOf(right)
 		if left_type.Kind() == reflect.String && right_type.Kind() == reflect.String {
@@ -94,33 +96,33 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 		} else if left_type.Kind() == reflect.Float64 && right_type.Kind() == reflect.Float64 {
 			return left.(float64) + right.(float64)
 		}
-		i.error(expr.operator, "Operands must be two numbers or two strings")
-	case MINUS:
+		i.error(expr.Operator, "Operands must be two numbers or two strings")
+	case scanner.MINUS:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) - right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case GREATER:
+	case scanner.GREATER:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) > right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case GREATER_EQUAL:
+	case scanner.GREATER_EQUAL:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) >= right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case LESS:
+	case scanner.LESS:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) < right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case LESS_EQUAL:
+	case scanner.LESS_EQUAL:
 		if reflect.TypeOf(left).Kind() == reflect.Float64 && reflect.TypeOf(right).Kind() == reflect.Float64 {
 			return left.(float64) <= right.(float64)
 		}
 		i.loxRuntimePanicBinNumeric()
-	case EQUAL_EQUAL:
+	case scanner.EQUAL_EQUAL:
 		left_type := reflect.TypeOf(left)
 		right_type := reflect.TypeOf(right)
 		if left_type.Kind() != right_type.Kind() {
@@ -133,7 +135,7 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 			return left.(bool) == right.(bool)
 		}
 
-	case BANG_EQUAL:
+	case scanner.BANG_EQUAL:
 		left_type := reflect.TypeOf(left)
 		right_type := reflect.TypeOf(right)
 		if left_type.Kind() != right_type.Kind() {
@@ -150,9 +152,9 @@ func (i Interpreter) visitBinaryExpr(expr *BinaryExpr) any {
 	return nil
 }
 
-func (i Interpreter) visitLogicalExpr(expr *LogicalExpr) any {
-	left := i.evaluate(expr.left)
-	if expr.operator.Token == OR {
+func (i Interpreter) VisitLogicalExpr(expr *parser.LogicalExpr) any {
+	left := i.Evaluate(expr.Left)
+	if expr.Operator.Token == scanner.OR {
 		if booleanCast(left) == true {
 			return left
 		}
@@ -161,119 +163,119 @@ func (i Interpreter) visitLogicalExpr(expr *LogicalExpr) any {
 			return left
 		}
 	}
-	right := i.evaluate(expr.right)
+	right := i.Evaluate(expr.Right)
 	return right
 }
 
-func (i Interpreter) visitCallExpr(expr *CallExpr) any {
-	callee := i.evaluate(expr.callee)
+func (i Interpreter) VisitCallExpr(expr *parser.CallExpr) any {
+	callee := i.Evaluate(expr.Callee)
 	switch callee.(type) {
 	case LoxCallable:
 		goto FINE
 	default:
-		i.error(expr.caleeToken, "Can only call functions and classes")
+		i.error(expr.CaleeToken, "Can only call functions and classes")
 	}
 FINE:
 	arguments := make([]any, 0)
-	for _, arg := range expr.args {
-		arguments = append(arguments, i.evaluate(arg))
+	for _, arg := range expr.Args {
+		arguments = append(arguments, i.Evaluate(arg))
 	}
 	var function LoxCallable
 	function = callee.(LoxCallable)
 	if function.arity() != len(arguments) {
-		i.error(expr.caleeToken, fmt.Sprintf("expected %v arguments but got %v\n", function.arity(), len(arguments)))
+		i.error(expr.CaleeToken, fmt.Sprintf("expected %v arguments but got %v\n", function.arity(), len(arguments)))
 	}
 	return function.call(i, arguments)
 }
 
-func (i Interpreter) visitArrayDeclExpr(expr *ArrayDeclExpr) any {
-	eval_elements := make([]any, len(expr.elements))
-	for idx, element := range expr.elements {
-		eval_elements[idx] = i.evaluate(element)
+func (i Interpreter) VisitArrayDeclExpr(expr *parser.ArrayDeclExpr) any {
+	eval_elements := make([]any, len(expr.Elements))
+	for idx, element := range expr.Elements {
+		eval_elements[idx] = i.Evaluate(element)
 	}
 	return eval_elements
 }
 
-func (i Interpreter) visitSubscriptExpr(expr *SubscriptExpr) any {
-	array := i.evaluate(expr.object)
-	index := i.evaluate(expr.index)
+func (i Interpreter) VisitSubscriptExpr(expr *parser.SubscriptExpr) any {
+	array := i.Evaluate(expr.Object)
+	index := i.Evaluate(expr.Index)
 	switch array := array.(type) {
 	case []any:
 		switch index := index.(type) {
 		case float64:
 			intIndex := int64(index)
 			if float64(intIndex) < index {
-				i.error(expr.indexToken, "Expected integral number")
+				i.error(expr.IndexToken, "Expected integral number")
 			}
 			if intIndex >= int64(len(array)) {
-				i.error(expr.indexToken, "Out of range")
+				i.error(expr.IndexToken, "Out of range")
 			}
 			return array[intIndex]
 		default:
-			i.error(expr.indexToken, "Expect number")
+			i.error(expr.IndexToken, "Expect number")
 		}
 	default:
-		i.error(expr.objectToken, "Only arrays can be subscripted")
+		i.error(expr.ObjectToken, "Only arrays can be subscripted")
 	}
 	panic("unreachable")
 }
 
-func (i Interpreter) visitGetExpr(expr *GetExpr) any {
-	object := i.evaluate(expr.object)
+func (i Interpreter) VisitGetExpr(expr *parser.GetExpr) any {
+	object := i.Evaluate(expr.Object)
 	switch object.(type) {
 	case *LoxInstance:
-		return object.(*LoxInstance).Get(expr.name)
+		return object.(*LoxInstance).Get(expr.Name)
 	default:
-		i.error(expr.name, "Only instance have properties")
+		i.error(expr.Name, "Only instance have properties")
 	}
 	return nil
 }
 
-func (i Interpreter) visitSetExpr(expr *SetExpr) any {
-	object := i.evaluate(expr.object)
+func (i Interpreter) VisitSetExpr(expr *parser.SetExpr) any {
+	object := i.Evaluate(expr.Object)
 	var exprRes any
 	switch object.(type) {
 	case *LoxInstance:
-		exprRes = i.evaluate(expr.value)
-		object.(*LoxInstance).Set(expr.name, exprRes)
+		exprRes = i.Evaluate(expr.Value)
+		object.(*LoxInstance).Set(expr.Name, exprRes)
 	default:
-		i.error(expr.name, "Only instance have fields")
+		i.error(expr.Name, "Only instance have fields")
 	}
 	return exprRes
 }
 
-func (i Interpreter) visitSuperExpr(expr *SuperExpr) any {
+func (i Interpreter) VisitSuperExpr(expr *parser.SuperExpr) any {
 	distance := i.locals[expr]
 	superclass := i.state.accessAt(distance, "super").(*LoxClass)
 	instance := i.state.accessAt(distance-1, "this").(*LoxInstance)
-	method := superclass.findMethod(expr.method.Lexeme)
+	method := superclass.findMethod(expr.Method.Lexeme)
 	if method == nil {
-		i.error(expr.keyword, fmt.Sprintf("Undefined property %v'", expr.method.Lexeme))
+		i.error(expr.Keyword, fmt.Sprintf("Undefined property %v'", expr.Method.Lexeme))
 	}
 	return method.bind(instance)
 }
 
-func (i Interpreter) visitThisExpr(expr *ThisExpr) any {
-	return i.lookUpVariable(expr.keyword, expr)
+func (i Interpreter) VisitThisExpr(expr *parser.ThisExpr) any {
+	return i.lookUpVariable(expr.Keyword, expr)
 }
 
-func (i Interpreter) visitAssignExpr(expr *AssignExpr) any {
-	value := i.evaluate(expr.value)
+func (i Interpreter) VisitAssignExpr(expr *parser.AssignExpr) any {
+	value := i.Evaluate(expr.Value)
 	distance, ok := i.locals[expr]
 	if ok {
-		i.state.assignAt(distance, expr.name.Lexeme, value)
+		i.state.assignAt(distance, expr.Name.Lexeme, value)
 	} else {
-		i.globals.assign(expr.name.Lexeme, value)
+		i.globals.assign(expr.Name.Lexeme, value)
 	}
 	return value
 }
 
-func (i Interpreter) visitExpressionStmt(stmt *Expression) {
-	i.evaluate(stmt.expr)
+func (i Interpreter) VisitExpressionStmt(stmt *parser.Expression) {
+	i.Evaluate(stmt.Expr)
 }
 
-func (i Interpreter) visitPrintStmt(stmt *Print) {
-	value := i.evaluate(stmt.expr)
+func (i Interpreter) VisitPrintStmt(stmt *parser.Print) {
+	value := i.Evaluate(stmt.Expr)
 	if value != nil {
 		switch v := value.(type) {
 		case float64:
@@ -290,70 +292,70 @@ func (i Interpreter) visitPrintStmt(stmt *Print) {
 	}
 }
 
-func (i Interpreter) visitVarStmt(stmt *Var) {
+func (i Interpreter) VisitVarStmt(stmt *parser.Var) {
 	var value any = nil
-	if stmt.varValue != nil {
-		value = i.evaluate(stmt.varValue)
+	if stmt.VarValue != nil {
+		value = i.Evaluate(stmt.VarValue)
 	}
-	i.state.define(stmt.varName.Lexeme, value)
+	i.state.define(stmt.VarName.Lexeme, value)
 }
 
-func (i Interpreter) visitBlockStmt(stmt *Block) {
+func (i Interpreter) VisitBlockStmt(stmt *parser.Block) {
 	i.executeBlock(stmt, NewState(i.state))
 }
 
-func (i Interpreter) visitIfStmt(stmt *If) {
-	if booleanCast(i.evaluate(stmt.condition)) {
-		i.execute(stmt.thenBranch)
-	} else if stmt.elseBranch != nil {
-		i.execute(stmt.elseBranch)
+func (i Interpreter) VisitIfStmt(stmt *parser.If) {
+	if booleanCast(i.Evaluate(stmt.Condition)) {
+		i.Execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		i.Execute(stmt.ElseBranch)
 	}
 }
 
-func (i Interpreter) visitWhileStmt(stmt *While) {
-	for booleanCast(i.evaluate(stmt.condition)) == true {
-		i.execute(stmt.body)
+func (i Interpreter) VisitWhileStmt(stmt *parser.While) {
+	for booleanCast(i.Evaluate(stmt.Condition)) == true {
+		i.Execute(stmt.Body)
 	}
 }
 
-func (i Interpreter) visitClassStmt(stmt *Class) {
+func (i Interpreter) VisitClassStmt(stmt *parser.Class) {
 	var superclass *LoxClass = nil
-	if stmt.superclass != nil {
-		superclassEval := i.evaluate(stmt.superclass)
+	if stmt.Superclass != nil {
+		superclassEval := i.Evaluate(stmt.Superclass)
 		if _, ok := superclassEval.(*LoxClass); !ok {
-			i.error(stmt.name, "Can't inherit not from class")
+			i.error(stmt.Name, "Can't inherit not from class")
 		}
 		superclass = superclassEval.(*LoxClass)
 	}
-	i.state.define(stmt.name.Lexeme, nil)
+	i.state.define(stmt.Name.Lexeme, nil)
 
-	if stmt.superclass != nil {
+	if stmt.Superclass != nil {
 		i.state = NewState(i.state)
 		i.state.define("super", superclass)
 	}
 
 	methods := make(map[string]*LoxFunction, 0)
-	for _, method := range stmt.methods {
-		function := NewLoxFunction(method, i.state, method.name.Lexeme == "init")
-		methods[method.name.Lexeme] = function
+	for _, method := range stmt.Methods {
+		function := NewLoxFunction(method, i.state, method.Name.Lexeme == "init")
+		methods[method.Name.Lexeme] = function
 	}
-	cls := NewLoxClass(stmt.name.Lexeme, superclass, methods)
+	cls := NewLoxClass(stmt.Name.Lexeme, superclass, methods)
 	if superclass != nil {
 		i.state = i.state.enclosing
 	}
-	i.state.assign(stmt.name.Lexeme, cls)
+	i.state.assign(stmt.Name.Lexeme, cls)
 }
 
-func (i Interpreter) visitFunctionStmt(stmt *Function) {
+func (i Interpreter) VisitFunctionStmt(stmt *parser.Function) {
 	closure := i.state
 	fn := NewLoxFunction(stmt, closure, false)
-	i.state.define(stmt.name.Lexeme, fn)
+	i.state.define(stmt.Name.Lexeme, fn)
 }
 
-func (i Interpreter) visitReturnStmt(stmt *Return) {
+func (i Interpreter) VisitReturnStmt(stmt *parser.Return) {
 	var result any = nil
-	if stmt.value != nil {
-		result = i.evaluate(stmt.value)
+	if stmt.Value != nil {
+		result = i.Evaluate(stmt.Value)
 	}
 	if result == nil {
 		result = "nil"
@@ -361,28 +363,28 @@ func (i Interpreter) visitReturnStmt(stmt *Return) {
 	panic(result)
 }
 
-func (i Interpreter) executeBlock(block *Block, state *State) {
+func (i Interpreter) executeBlock(block *parser.Block, state *State) {
 	prevState := i.state
 	i.state = state
 	defer func() { i.state = prevState }()
-	for _, stmt := range block.stmts {
-		i.execute(stmt)
+	for _, stmt := range block.Stmts {
+		i.Execute(stmt)
 	}
 }
 
-func (i Interpreter) evaluate(expr Expr) any {
-	return expr.accept(i)
+func (i Interpreter) Evaluate(expr parser.Expr) any {
+	return expr.Accept(i)
 }
 
-func (i Interpreter) execute(stmt Stmt) {
-	stmt.accept(i)
+func (i Interpreter) Execute(stmt parser.Stmt) {
+	stmt.Accept(i)
 }
 
-func (i Interpreter) resolve(expr Expr, depth int) {
+func (i Interpreter) resolve(expr parser.Expr, depth int) {
 	i.locals[expr] = depth
 }
 
-func (i Interpreter) lookUpVariable(name Token, expr Expr) any {
+func (i Interpreter) lookUpVariable(name scanner.Token, expr parser.Expr) any {
 	distance, ok := i.locals[expr]
 	if ok {
 		return i.state.accessAt(distance, name.Lexeme)
@@ -408,7 +410,7 @@ func (i Interpreter) loxRuntimePanicBinNumeric() {
 	os.Exit(70)
 }
 
-func (i Interpreter) error(token Token, msg string) {
+func (i Interpreter) error(token scanner.Token, msg string) {
 	fmt.Fprintf(os.Stderr, "[line %v] at '%v' %v.\n", token.Line, token.Lexeme, msg)
 	os.Exit(70)
 }
