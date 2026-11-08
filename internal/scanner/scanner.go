@@ -36,6 +36,7 @@ func (s *Scanner) Scan() ([]Token, error) {
 		if token.Token == SKIP {
 			continue
 		}
+		tokens = append(tokens, token)
 		if token.Token == EOF {
 			break
 		}
