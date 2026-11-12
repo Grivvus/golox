@@ -1,10 +1,19 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"golox/internal/scanner"
-	"os"
+	"strings"
 )
+
+type ParsingError struct {
+	msg string
+}
+
+func (e *ParsingError) Error() string {
+	return fmt.Sprintf("error happend during parsing stage: %w", e.msg)
+}
 
 type Parser struct {
 	tokens       []scanner.Token
@@ -24,23 +33,34 @@ func New(tokens []scanner.Token) *Parser {
 	return p
 }
 
-func (p *Parser) ParseExprs() []Expr {
+func (p *Parser) ParseExprs() ([]Expr, error) {
 	for !p.isAtEnd() {
 		expr := p.nextExpr()
-		if expr != nil {
-			p.Exprs = append(p.Exprs, expr)
+		if len(p.Errs) != 0 {
+			return nil, errors.Join(p.Errs...)
 		}
+		if expr == nil {
+			panic("invalid state: expr is nil while no errors")
+		}
+		p.Exprs = append(p.Exprs, expr)
 	}
-	return p.Exprs
+	return p.Exprs, nil
 }
 
-func (p *Parser) ParseStmts() []Stmt {
+func (p *Parser) ParseStmts() ([]Stmt, error) {
 	var stmts []Stmt
 	for !p.isAtEnd() {
-		stmts = append(stmts, p.declaration())
+		newStmt := p.declaration()
+		if len(p.Errs) != 0 {
+			return nil, errors.Join(p.Errs...)
+		}
+		if newStmt == nil {
+			panic("invalid state: stmt is nil while no errors")
+		}
+		stmts = append(stmts, newStmt)
 	}
 
-	return stmts
+	return stmts, nil
 }
 
 func (p *Parser) declaration() Stmt {
@@ -79,6 +99,7 @@ func (p *Parser) blockStatement() Stmt {
 	}
 	if p.GetCurrent().Token != scanner.RIGHT_BRACE {
 		p.error("Expect '}' after block statement")
+		return nil
 	}
 	p.incrIndex()
 	return NewBlock(stmts)
@@ -90,15 +111,18 @@ func (p *Parser) classDeclaration() Stmt {
 	p.incrIndex()
 	if name.Token != scanner.IDENTIFIER {
 		p.error("Expect class name.")
+		return nil
 	}
 	if p.match(scanner.LESS) {
 		if !p.match(scanner.IDENTIFIER) {
 			p.error("Expect superclass name.")
+			return nil
 		}
 		superclass = NewVarExpr(p.getPrev())
 	}
 	if !p.match(scanner.LEFT_BRACE) {
 		p.error("Expect '{' before class body.")
+		return nil
 	}
 	methods := make([]*Function, 0)
 	for !p.check(scanner.RIGHT_BRACE) && !p.isAtEnd() {
@@ -110,6 +134,7 @@ func (p *Parser) classDeclaration() Stmt {
 	}
 	if !p.match(scanner.RIGHT_BRACE) {
 		p.error("Expected '}' after class body.")
+		return nil
 	}
 
 	return NewClass(name, superclass, methods)
@@ -121,9 +146,11 @@ func (p *Parser) funStatement(kind string) Stmt {
 	p.currentIndex++
 	if name.Token != scanner.IDENTIFIER {
 		p.error(fmt.Sprintf("Expect %v name", kind))
+		return nil
 	}
 	if !p.match(scanner.LEFT_PAREN) {
 		p.error("Expect '(' before condition expression")
+		return nil
 	}
 
 	if !p.check(scanner.RIGHT_PAREN) {
@@ -133,20 +160,24 @@ func (p *Parser) funStatement(kind string) Stmt {
 		for p.match(scanner.COMMA) {
 			if len(parameters) > 255 {
 				p.error(fmt.Sprintf("too many arguments %v, expect no more than 255", len(parameters)))
+				return nil
 			}
 			param := p.GetCurrent()
 			p.currentIndex++
 			if param.Token != scanner.IDENTIFIER {
 				p.error("Expect parametr name")
+				return nil
 			}
 			parameters = append(parameters, param)
 		}
 	}
 	if !p.match(scanner.RIGHT_PAREN) {
 		p.error("Expect '(' after parameters")
+		return nil
 	}
 	if !p.match(scanner.LEFT_BRACE) {
 		p.error("Expect '{' before function body")
+		return nil
 	}
 	body := p.blockStatement()
 	return NewFunction(name, parameters, body.(*Block))
@@ -161,6 +192,7 @@ func (p *Parser) returnStatement() Stmt {
 
 	if !p.match(scanner.SEMICOLON) {
 		p.error("Expect ';' after expression")
+		return nil
 	}
 	return NewReturn(retKeyWord, value)
 }
@@ -170,12 +202,14 @@ func (p *Parser) varStatement() Stmt {
 	var varValue Expr = nil
 	if varName.Token != scanner.IDENTIFIER {
 		p.error("Expect variable name.")
+		return nil
 	}
 	if p.match(scanner.EQUAL) {
 		varValue = p.nextExpr()
 	}
 	if p.GetCurrent().Token != scanner.SEMICOLON {
 		p.error("Expect ';' after variable declaration")
+		return nil
 	}
 	p.incrIndex()
 	return NewVar(varName, varValue)
@@ -185,6 +219,7 @@ func (p *Parser) printStatement() Stmt {
 	expr := p.nextExpr()
 	if !p.match(scanner.SEMICOLON) {
 		p.error("Expect ';' after expression")
+		return nil
 	}
 	return NewPrint(expr)
 }
@@ -193,6 +228,7 @@ func (p *Parser) expressionStatement() Stmt {
 	expr := p.nextExpr()
 	if !p.match(scanner.SEMICOLON) {
 		p.error("Expect ';' after expression")
+		return nil
 	}
 	return NewExpression(expr)
 }
@@ -200,10 +236,12 @@ func (p *Parser) expressionStatement() Stmt {
 func (p *Parser) ifStatement() Stmt {
 	if !p.match(scanner.LEFT_PAREN) {
 		p.error("Expect '(' before condition expression")
+		return nil
 	}
 	condition := p.nextExpr()
 	if !p.match(scanner.RIGHT_PAREN) {
 		p.error("Expect ')' after condition expression")
+		return nil
 	}
 	thenBranch := p.statement()
 	var elseBranch Stmt
@@ -218,11 +256,12 @@ func (p *Parser) ifStatement() Stmt {
 func (p *Parser) whileStatement() Stmt {
 	if !p.match(scanner.LEFT_PAREN) {
 		p.error("Expect '(' before condition expression")
-		os.Exit(65)
+		return nil
 	}
 	condition := p.nextExpr()
 	if !p.match(scanner.RIGHT_PAREN) {
 		p.error("Expect ')' after condition expression")
+		return nil
 	}
 	body := p.statement()
 
@@ -232,6 +271,7 @@ func (p *Parser) whileStatement() Stmt {
 func (p *Parser) forStatement() Stmt {
 	if !p.match(scanner.LEFT_PAREN) {
 		p.error("Expect '(' before condition expression")
+		return nil
 	}
 
 	var initializer Stmt
@@ -249,6 +289,7 @@ func (p *Parser) forStatement() Stmt {
 	}
 	if !p.match(scanner.SEMICOLON) {
 		p.error("Expect ';' after loop condition")
+		return nil
 	}
 
 	var increment Expr = nil
@@ -257,6 +298,7 @@ func (p *Parser) forStatement() Stmt {
 	}
 	if !p.match(scanner.RIGHT_PAREN) {
 		p.error("Expect ')' after for clauses")
+		return nil
 	}
 
 	body := p.statement()
@@ -330,10 +372,12 @@ func (p *Parser) literalExpr() Expr {
 		token := p.getPrev()
 		if !p.match(scanner.DOT) {
 			p.error("Expect '.' after 'super'.")
+			return nil
 		}
 		method := p.incrIndex()
 		if method.Token != scanner.IDENTIFIER {
 			p.error("Expect method name after 'super'")
+			return nil
 		}
 		return NewSuperExpr(token, method)
 	} else if p.match(scanner.THIS) {
@@ -363,6 +407,7 @@ func (p *Parser) arrayLiteral() Expr {
 	}
 	if !p.check(scanner.RIGHT_SQUARE_BRACKET) {
 		p.error("Expect ']' after array declaration")
+		return nil
 	}
 	p.currentIndex++
 	return NewArrayDeclExpr(elements)
@@ -376,6 +421,7 @@ func (p *Parser) group() Expr {
 		}
 		if !p.check(scanner.RIGHT_PAREN) {
 			p.error("Expect ) after expression")
+			return nil
 		} else {
 			p.currentIndex++
 		}
@@ -393,12 +439,14 @@ func (p *Parser) finishCall(callee Expr) Expr {
 		}
 		if len(arguments) > 255 {
 			p.error(fmt.Sprintf("too many arguments %v, expect no more than 255", len(arguments)))
+			return nil
 		}
 	}
 
 	rp := p.GetCurrent()
 	if rp.Token != scanner.RIGHT_PAREN {
 		p.error("expected ')' after arguments")
+		return nil
 	}
 	p.currentIndex++
 	return NewCallExpr(p.getPrev(), callee, arguments)
@@ -408,6 +456,7 @@ func (p *Parser) finishSubscript(object Expr) Expr {
 	index := p.nextExpr()
 	if p.GetCurrent().Token != scanner.RIGHT_SQUARE_BRACKET {
 		p.error("Expect ']' after array subscription")
+		return nil
 	}
 	indexToken := p.getPrev()
 	objectToken := p.tokens[p.currentIndex-2]
@@ -427,6 +476,7 @@ func (p *Parser) call() Expr {
 			p.currentIndex++
 			if name.Token != scanner.IDENTIFIER {
 				p.error("Expect property name after '.'")
+				return nil
 			}
 			expr = NewGetExpr(expr, name)
 		} else {
@@ -546,6 +596,7 @@ func (p *Parser) assignment() Expr {
 			return NewSetExpr(get.Object, get.Name, value)
 		default:
 			p.error("Invalid assignment target")
+			return nil
 		}
 	}
 	return expr
@@ -556,6 +607,5 @@ func (p *Parser) nextExpr() Expr {
 }
 
 func (p *Parser) error(msg string) {
-	fmt.Fprintf(os.Stderr, "[line %v] error at %v: %v\n", p.GetCurrent().Line, p.GetCurrent().Lexeme, msg)
-	os.Exit(65)
+	p.Errs = append(p.Errs, &ParsingError{msg: strings.ToLower(msg)})
 }

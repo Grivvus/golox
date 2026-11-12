@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"golox/internal/parser"
 	"golox/internal/scanner"
-	"os"
 	"reflect"
 )
 
@@ -52,9 +51,9 @@ func (i Interpreter) VisitUnaryExpr(expr *parser.UnaryExpr) any {
 	case scanner.BANG:
 		return !booleanCast(right)
 	case scanner.MINUS:
-		switch right.(type) {
+		switch right := right.(type) {
 		case float64:
-			return -(right.(float64))
+			return -right
 		default:
 			i.loxRuntimePanicBinNumeric()
 		}
@@ -406,11 +405,9 @@ func booleanCast(expr any) bool {
 }
 
 func (i Interpreter) loxRuntimePanicBinNumeric() {
-	fmt.Fprintln(os.Stderr, "Operands must be a numbers")
-	os.Exit(70)
+	panic(fmt.Sprintf("Operands must be a numbers"))
 }
 
 func (i Interpreter) error(token scanner.Token, msg string) {
-	fmt.Fprintf(os.Stderr, "[line %v] at '%v' %v.\n", token.Line, token.Lexeme, msg)
-	os.Exit(70)
+	panic(fmt.Sprintf("[line %v] at '%v' %v.\n", token.Line, token.Lexeme, msg))
 }

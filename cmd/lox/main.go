@@ -23,6 +23,13 @@ func main() {
 		return
 	}
 
+	defer func() {
+		if r := recover(); r != nil {
+			exitCode = 70
+			exitMessage = r.(string)
+		}
+	}()
+
 	command := os.Args[1]
 
 	if command != "tokenize" && command != "parse" && command != "evaluate" && command != "run" {
@@ -68,7 +75,12 @@ func main() {
 		exitCode = parser.ExitCode
 	} else if command == "evaluate" {
 		parser := parser.New(tokens)
-		exprs := parser.ParseExprs()
+		exprs, err := parser.ParseExprs()
+		if err != nil {
+			exitCode = 65
+			exitMessage = err.Error()
+			return
+		}
 		interp := interpreter.New(parser)
 		var res []any
 		for _, expr := range exprs {
@@ -85,7 +97,12 @@ func main() {
 		parser := parser.New(tokens)
 		interp := interpreter.New(parser)
 		resolver := interpreter.NewResolver(interp)
-		stmts := parser.ParseStmts()
+		stmts, err := parser.ParseStmts()
+		if err != nil {
+			exitCode = 65
+			exitMessage = err.Error()
+			return
+		}
 		resolver.ResolveStmts(stmts)
 		for _, stmt := range stmts {
 			interp.Execute(stmt)

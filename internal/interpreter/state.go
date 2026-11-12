@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"fmt"
-	"os"
 )
 
 type State struct {
@@ -64,6 +63,5 @@ func (s *State) assignAt(distance int, name string, value any) {
 }
 
 func (s State) error(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(70)
+	panic(msg)
 }

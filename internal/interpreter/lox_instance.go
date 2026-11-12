@@ -3,7 +3,6 @@ package interpreter
 import (
 	"fmt"
 	"golox/internal/scanner"
-	"os"
 )
 
 type LoxInstance struct {
@@ -31,9 +30,7 @@ func (instance *LoxInstance) Get(name scanner.Token) any {
 	if method != nil {
 		return method.bind(instance)
 	}
-	fmt.Fprintf(os.Stderr, "[line %v] Undefined property '%v'", name.Line, name.Lexeme)
-	os.Exit(70)
-	return nil
+	panic(fmt.Sprintf("[line %v] Undefined property '%v'", name.Line, name.Lexeme))
 }
 
 func (instance *LoxInstance) Set(name scanner.Token, value any) {

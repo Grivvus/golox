@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"golox/internal/parser"
 	"golox/internal/scanner"
-	"os"
 )
 
 type _functionType struct{}
@@ -309,6 +308,5 @@ func (r Resolver) VisitUnaryExpr(expr *parser.UnaryExpr) any {
 }
 
 func (r Resolver) error(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(65)
+	panic(msg)
 }
