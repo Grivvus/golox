@@ -221,9 +221,9 @@ func (i Interpreter) VisitSubscriptExpr(expr *parser.SubscriptExpr) any {
 
 func (i Interpreter) VisitGetExpr(expr *parser.GetExpr) any {
 	object := i.Evaluate(expr.Object)
-	switch object.(type) {
+	switch typedObj := object.(type) {
 	case *LoxInstance:
-		return object.(*LoxInstance).Get(expr.Name)
+		return typedObj.Get(expr.Name)
 	default:
 		i.error(expr.Name, "Only instance have properties")
 	}
@@ -233,10 +233,10 @@ func (i Interpreter) VisitGetExpr(expr *parser.GetExpr) any {
 func (i Interpreter) VisitSetExpr(expr *parser.SetExpr) any {
 	object := i.Evaluate(expr.Object)
 	var exprRes any
-	switch object.(type) {
+	switch typedObj := object.(type) {
 	case *LoxInstance:
 		exprRes = i.Evaluate(expr.Value)
-		object.(*LoxInstance).Set(expr.Name, exprRes)
+		typedObj.Set(expr.Name, exprRes)
 	default:
 		i.error(expr.Name, "Only instance have fields")
 	}
@@ -396,9 +396,9 @@ func booleanCast(expr any) bool {
 	if expr == nil {
 		return false
 	}
-	switch expr.(type) {
+	switch expr := expr.(type) {
 	case bool:
-		return expr.(bool)
+		return expr
 	default:
 		return true
 	}
